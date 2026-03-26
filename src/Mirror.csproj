@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Mirror</Title>
-    <Version>1.0.0</Version>
+    <Version>1.0.0.0</Version>
     <Authors>RYSECODE</Authors>
     <Company>RYSECODE</Company>
     <PackageIcon>mirror.png</PackageIcon>
@@ -18,6 +18,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>mapping object-mapper object-to-object reflection mirror automapper-alternative</PackageTags>
     <NeutralLanguage>pt-BR</NeutralLanguage>
+    <AssemblyName>RysePackage.Mirror</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
