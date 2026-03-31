@@ -24,7 +24,7 @@ public class MirrorProfileExpression(MirrorConfiguration configuration) : IMirro
 		var key = (typeof(TOrigem), typeof(TDestino));
 
 		if (!_configuration.Transformations.ContainsKey(key))
-			_configuration.Transformations[key] = new Dictionary<string, Func<object, object>>();
+			_configuration.Transformations[key] = new Dictionary<string, Func<object, object?>>();
 
 		if (destinoMember.Body is MemberExpression memberExpr)
 		{

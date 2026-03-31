@@ -53,8 +53,13 @@ public static class MirrorServiceCollectionExtensions
 		services.AddMirror(configure);
 		services.AddMirrorProfiles(assemblies);
 
-		// Adiciona um hosted service para aplicar as configurações dos profiles
 		services.AddSingleton<MirrorProfileApplier>();
+		services.AddScoped<IMirror>(provider =>
+		{
+			provider.GetRequiredService<MirrorProfileApplier>().ApplyProfiles();
+			var config = provider.GetRequiredService<MirrorConfiguration>();
+			return new Mirror(config);
+		});
 
 		return services;
 	}
@@ -84,6 +89,8 @@ public class MirrorProfileApplier
 	private readonly MirrorConfiguration _configuration;
 	private readonly IEnumerable<IMirrorProfile> _profiles;
 	private readonly IMirrorProfileConfigurator _configurator;
+	private readonly object _sync = new();
+	private bool _applied;
 
 	public MirrorProfileApplier(
 		MirrorConfiguration configuration,
@@ -97,6 +104,16 @@ public class MirrorProfileApplier
 
 	public void ApplyProfiles()
 	{
-		_configurator.ApplyProfiles(_configuration, _profiles);
+		if (_applied)
+			return;
+
+		lock (_sync)
+		{
+			if (_applied)
+				return;
+
+			_configurator.ApplyProfiles(_configuration, _profiles);
+			_applied = true;
+		}
 	}
 }

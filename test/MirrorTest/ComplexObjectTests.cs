@@ -216,4 +216,44 @@ public class ComplexObjectTests
 		Assert.Equal(dto.Empresa.RazaoSocial, result.Empresa.RazaoSocial);
 		Assert.Equal(dto.Enderecos[0].Logradouro, result.Enderecos[0].Logradouro);
 	}
+
+	[Fact]
+	public void Deve_Respeitar_MaxDepth_Em_Objetos_Aninhados()
+	{
+		var config = new MirrorConfiguration { MaxDepth = 1 };
+		var mirror = new Mirror(config);
+
+		var origem = new Node
+		{
+			Nome = "Pai",
+			Filho = new Node
+			{
+				Nome = "Filho",
+				Filho = new Node { Nome = "Neto" }
+			}
+		};
+
+		var destino = mirror.Reflect<Node, NodeDto>(origem);
+
+		Assert.Equal("Pai", destino.Nome);
+		Assert.NotNull(destino.Filho);
+		Assert.Equal("Filho", destino.Filho.Nome);
+		Assert.Null(destino.Filho.Filho);
+	}
+
+	[Fact]
+	public void Deve_Evitar_Recursao_Infinita_Em_Grafo_Ciclico()
+	{
+		var mirror = new Mirror(new MirrorConfiguration { MaxDepth = 10 });
+
+		var origem = new Node { Nome = "Raiz" };
+		origem.Filho = origem;
+
+		var destino = mirror.Reflect<Node, NodeDto>(origem);
+
+		Assert.Equal("Raiz", destino.Nome);
+		Assert.NotNull(destino.Filho);
+		Assert.Equal("Raiz", destino.Filho.Nome);
+		Assert.Null(destino.Filho.Filho);
+	}
 }

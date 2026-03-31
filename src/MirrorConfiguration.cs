@@ -4,9 +4,9 @@ namespace Mirror;
 
 public class MirrorConfiguration
 {
-	internal Dictionary<(Type, Type), Dictionary<string, Func<object, object>>> Transformations { get; } = new();
+	internal Dictionary<(Type, Type), Dictionary<string, Func<object, object?>>> Transformations { get; } = new();
 
-	internal Dictionary<(Type, Type), Delegate> Factories { get; } = new();
+	internal Dictionary<(Type, Type), Func<object, object?>> Factories { get; } = new();
 
 	public bool IgnoreNullValues { get; set; } = false;
 
@@ -19,7 +19,9 @@ public class MirrorConfiguration
 
 	public void AddFactory<TOrigem, TDestino>(Func<TOrigem, TDestino> factory)
 	{
-		Factories[(typeof(TOrigem), typeof(TDestino))] = factory;
+		ArgumentNullException.ThrowIfNull(factory);
+
+		Factories[(typeof(TOrigem), typeof(TDestino))] = origem => factory((TOrigem)origem);
 	}
 }
 
@@ -50,7 +52,7 @@ public class ReflectionExpression<TOrigem, TDestino> : IReflectionExpression<TOr
 			var key = (typeof(TOrigem), typeof(TDestino));
 
 			if (!_configuration.Transformations.ContainsKey(key))
-				_configuration.Transformations[key] = new Dictionary<string, Func<object, object>>();
+				_configuration.Transformations[key] = new Dictionary<string, Func<object, object?>>();
 
 			var propertyName = memberExpr.Member.Name;
 			_configuration.Transformations[key][propertyName] = obj => transform((TOrigem)obj);

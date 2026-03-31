@@ -131,9 +131,7 @@ public class ProfileTests
 
 		Assert.NotNull(dto);
 		Assert.Equal(pessoa.Nome, dto.Nome);
-
-		// NOTA: A transformação de idade ainda não está funcionando
-		// Este teste será atualizado quando a funcionalidade for implementada
+		Assert.Equal(CalcularIdadeEsperada(pessoa.DataNascimento), dto.Idade);
 	}
 
 	[Fact]
@@ -188,9 +186,7 @@ public class ProfileTests
 		var pessoaDto = mirror.Reflect<Pessoa, PessoaDto>(pessoa);
 		Assert.NotNull(pessoaDto);
 		Assert.Equal(pessoa.Nome, pessoaDto.Nome);
-
-		// NOTA: A transformação de idade ainda não está funcionando
-		// Este teste será atualizado quando a funcionalidade for implementada
+		Assert.Equal(CalcularIdadeEsperada(pessoa.DataNascimento), pessoaDto.Idade);
 
 		// Assert - Verifica as configurações globais
 		var origemComNull = new { Nome = (string?)null };
@@ -235,9 +231,7 @@ public class ProfileTests
 		var pessoaDto = mirror.Reflect<Pessoa, PessoaDto>(pessoa);
 		Assert.NotNull(pessoaDto);
 		Assert.Equal(pessoa.Nome, pessoaDto.Nome);
-
-		// NOTA: A transformação de idade ainda não está funcionando
-		// Este teste será atualizado quando a funcionalidade for implementada
+		Assert.Equal(CalcularIdadeEsperada(pessoa.DataNascimento), pessoaDto.Idade);
 	}
 
 	[Fact]
@@ -255,5 +249,15 @@ public class ProfileTests
 		});
 
 		Assert.Contains("devem ser os mesmos", excecao.Message);
+	}
+
+	private static int CalcularIdadeEsperada(DateTime dataNascimento)
+	{
+		var hoje = DateTime.Today;
+		var idade = hoje.Year - dataNascimento.Year;
+		if (dataNascimento.Date > hoje.AddYears(-idade))
+			idade--;
+
+		return idade;
 	}
 }

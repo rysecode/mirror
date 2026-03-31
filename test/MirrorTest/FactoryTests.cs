@@ -154,6 +154,38 @@ public class FactoryTests
 		Assert.Equal(dto.Cnpj, result.Cnpj);
 	}
 
+	[Fact]
+	public void Deve_Usar_Factory_Registrada_Em_Objeto_Aninhado()
+	{
+		var config = new MirrorConfiguration();
+
+		config.AddFactory<CreateEmpresaRequestDto, EmpresaRequest>(dto =>
+			EmpresaRequest.Create(
+				$"{dto.RazaoSocial} - Factory",
+				dto.Fantasia,
+				dto.Cnpj
+			)
+		);
+
+		var mirror = new Mirror(config);
+		var origem = new KycEnterpriseRequestDto
+		{
+			Empresa = new CreateEmpresaRequestDto
+			{
+				RazaoSocial = "Empresa Teste",
+				Fantasia = "Teste",
+				Cnpj = "12345678000195"
+			}
+		};
+
+		var destino = mirror.Reflect<KycEnterpriseRequestDto, KycEnterpriseRequest>(origem);
+
+		Assert.NotNull(destino.Empresa);
+		Assert.Equal("Empresa Teste - Factory", destino.Empresa.RazaoSocial);
+		Assert.Equal(origem.Empresa.Fantasia, destino.Empresa.Fantasia);
+		Assert.Equal(origem.Empresa.Cnpj, destino.Empresa.Cnpj);
+	}
+
 	public class TestProfile : MirrorProfile
 	{
 		public override void Configure(IMirrorProfileExpression expression)
