@@ -23,6 +23,20 @@ public class ExtensionTests
 	}
 
 	[Fact]
+	public void Reflect_Extension_Sem_Parametro_Mirror_Deve_Funcionar()
+	{
+		MirrorExtensions.ResetDefaultMirror();
+
+		var pessoa = new Pessoa { Id = 3, Nome = "Carlos" };
+
+		var dto = pessoa.Reflect<PessoaDto>();
+
+		Assert.NotNull(dto);
+		Assert.Equal(3, dto.Id);
+		Assert.Equal("Carlos", dto.Nome);
+	}
+
+	[Fact]
 	public void ReflectTo_Extension_Deve_Atualizar_Objeto_Existente()
 	{
 		// Arrange
@@ -57,6 +71,24 @@ public class ExtensionTests
 		Assert.Equal(1, dtos[0].Id);
 		Assert.Equal("João", dtos[0].Nome);
 		Assert.Equal(2, dtos[1].Id);
+		Assert.Equal("Maria", dtos[1].Nome);
+	}
+
+	[Fact]
+	public void ReflectAll_Extension_Sem_Parametro_Mirror_Deve_Funcionar()
+	{
+		MirrorExtensions.ResetDefaultMirror();
+
+		var pessoas = new List<Pessoa>
+		{
+			new() { Id = 1, Nome = "João" },
+			new() { Id = 2, Nome = "Maria" }
+		};
+
+		var dtos = pessoas.ReflectAll<Pessoa, PessoaDto>().ToList();
+
+		Assert.Equal(2, dtos.Count);
+		Assert.Equal("João", dtos[0].Nome);
 		Assert.Equal("Maria", dtos[1].Nome);
 	}
 
@@ -162,6 +194,31 @@ public class ExtensionTests
 
 		// Verifica se a mensagem do MirrorException contém a mensagem original
 		Assert.Contains(excecaoOriginal.Message, mirrorExcecao.Message);
+	}
+
+	[Fact]
+	public void SetDefaultMirror_Deve_Permitir_Usar_Configuracao_Sem_Passar_Mirror()
+	{
+		var config = new MirrorConfiguration();
+		config.CreateReflection<Pessoa, PessoaDto>()
+			.ForMember(dto => dto.Idade, pessoa => 99);
+
+		MirrorExtensions.SetDefaultMirror(new Mirror(config));
+
+		var pessoa = new Pessoa
+		{
+			Id = 5,
+			Nome = "Config Default",
+			DataNascimento = new DateTime(1990, 1, 1)
+		};
+
+		var dto = pessoa.Reflect<PessoaDto>();
+
+		Assert.Equal(5, dto.Id);
+		Assert.Equal("Config Default", dto.Nome);
+		Assert.Equal(99, dto.Idade);
+
+		MirrorExtensions.ResetDefaultMirror();
 	}
 
 	// Opcional: Teste para verificar se a factory sem validação funciona (não lança exceção)

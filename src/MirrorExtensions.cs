@@ -7,6 +7,22 @@ namespace Mirror.Extensions;
 public static class MirrorExtensions
 {
 	private static readonly ConcurrentDictionary<(Type, Type), Func<object, IMirror, object>> _reflectCache = new();
+	private static IMirror _defaultMirror = new global::Mirror.Mirror();
+
+	public static void SetDefaultMirror(IMirror mirror)
+	{
+		_defaultMirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
+	}
+
+	public static void ResetDefaultMirror()
+	{
+		_defaultMirror = new global::Mirror.Mirror();
+	}
+
+	private static IMirror GetMirrorOrDefault(IMirror? mirror = null)
+	{
+		return mirror ?? _defaultMirror;
+	}
 
 	/// <summary>
 	/// Reflete o objeto de origem para um novo objeto do tipo destino.
@@ -16,13 +32,17 @@ public static class MirrorExtensions
 	/// <param name="origem">O objeto de origem</param>
 	/// <param name="mirror">A instância do Mirror</param>
 	/// <returns>Uma nova instância do tipo destino com os valores refletidos</returns>
+	public static TDestino Reflect<TDestino>(this object origem) where TDestino : new()
+	{
+		return origem.Reflect<TDestino>(GetMirrorOrDefault());
+	}
+
 	public static TDestino Reflect<TDestino>(this object origem, IMirror mirror) where TDestino : new()
 	{
 		if (origem == null)
 			throw new ArgumentNullException(nameof(origem));
 
-		if (mirror == null)
-			throw new ArgumentNullException(nameof(mirror));
+		mirror = GetMirrorOrDefault(mirror);
 
 		var origemType = origem.GetType();
 		var destinoType = typeof(TDestino);
@@ -45,6 +65,11 @@ public static class MirrorExtensions
 	/// <summary>
 	/// Reflete o objeto de origem para um objeto destino existente.
 	/// </summary>
+	public static void ReflectTo<TOrigem, TDestino>(this TOrigem origem, TDestino destino)
+	{
+		origem.ReflectTo(destino, GetMirrorOrDefault());
+	}
+
 	public static void ReflectTo<TOrigem, TDestino>(this TOrigem origem, TDestino destino, IMirror mirror)
 	{
 		if (origem == null)
@@ -53,8 +78,7 @@ public static class MirrorExtensions
 		if (destino == null)
 			throw new ArgumentNullException(nameof(destino));
 
-		if (mirror == null)
-			throw new ArgumentNullException(nameof(mirror));
+		mirror = GetMirrorOrDefault(mirror);
 
 		mirror.Reflect(origem, destino);
 	}
@@ -63,11 +87,19 @@ public static class MirrorExtensions
 	/// Reflete uma coleção de objetos de origem para uma nova coleção de objetos destino.
 	/// </summary>
 	public static IEnumerable<TDestino> ReflectAll<TDestino>(
+		this IEnumerable<object> origens) where TDestino : new()
+	{
+		return origens.ReflectAll<TDestino>(GetMirrorOrDefault());
+	}
+
+	public static IEnumerable<TDestino> ReflectAll<TDestino>(
 		this IEnumerable<object> origens,
 		IMirror mirror) where TDestino : new()
 	{
 		if (origens == null)
 			return Enumerable.Empty<TDestino>();
+
+		mirror = GetMirrorOrDefault(mirror);
 
 		return origens.Select(origem => origem.Reflect<TDestino>(mirror));
 	}
@@ -76,11 +108,19 @@ public static class MirrorExtensions
 	/// Versão genérica para coleções com tipo de origem conhecido.
 	/// </summary>
 	public static IEnumerable<TDestino> ReflectAll<TOrigem, TDestino>(
+		this IEnumerable<TOrigem> origens) where TDestino : new()
+	{
+		return origens.ReflectAll<TOrigem, TDestino>(GetMirrorOrDefault());
+	}
+
+	public static IEnumerable<TDestino> ReflectAll<TOrigem, TDestino>(
 		this IEnumerable<TOrigem> origens,
 		IMirror mirror) where TDestino : new()
 	{
 		if (origens == null)
 			return Enumerable.Empty<TDestino>();
+
+		mirror = GetMirrorOrDefault(mirror);
 
 		return origens.Select(origem => mirror.Reflect<TOrigem, TDestino>(origem));
 	}
@@ -90,6 +130,13 @@ public static class MirrorExtensions
 	/// </summary>
 	public static TDestino ReflectSafe<TDestino>(
 		this object origem,
+		Action<Exception>? onError = null)
+	{
+		return origem.ReflectSafe<TDestino>(GetMirrorOrDefault(), onError);
+	}
+
+	public static TDestino ReflectSafe<TDestino>(
+		this object origem,
 		IMirror mirror,
 		Action<Exception>? onError = null)
 	{
@@ -97,8 +144,7 @@ public static class MirrorExtensions
 		{
 			if (origem == null)
 				throw new ArgumentNullException(nameof(origem));
-			if (mirror == null)
-				throw new ArgumentNullException(nameof(mirror));
+			mirror = GetMirrorOrDefault(mirror);
 
 			var origemType = origem.GetType();
 			var destinoType = typeof(TDestino);
@@ -144,11 +190,19 @@ public static class MirrorExtensions
 	/// </summary>
 	public static TDestino ReflectSafeWithNew<TDestino>(
 		this object origem,
+		Action<Exception>? onError = null) where TDestino : new()
+	{
+		return origem.ReflectSafeWithNew<TDestino>(GetMirrorOrDefault(), onError);
+	}
+
+	public static TDestino ReflectSafeWithNew<TDestino>(
+		this object origem,
 		IMirror mirror,
 		Action<Exception>? onError = null) where TDestino : new()
 	{
 		try
 		{
+			mirror = GetMirrorOrDefault(mirror);
 			return origem.Reflect<TDestino>(mirror);
 		}
 		catch (Exception ex)
@@ -163,13 +217,19 @@ public static class MirrorExtensions
 	/// </summary>
 	public static TDestino ReflectWithFactory<TDestino>(
 		this object origem,
+		Func<object, TDestino> factory)
+	{
+		return origem.ReflectWithFactory(GetMirrorOrDefault(), factory);
+	}
+
+	public static TDestino ReflectWithFactory<TDestino>(
+		this object origem,
 		IMirror mirror,
 		Func<object, TDestino> factory)
 	{
 		if (origem == null)
 			throw new ArgumentNullException(nameof(origem));
-		if (mirror == null)
-			throw new ArgumentNullException(nameof(mirror));
+		mirror = GetMirrorOrDefault(mirror);
 		if (factory == null)
 			throw new ArgumentNullException(nameof(factory));
 
@@ -194,25 +254,35 @@ public static class MirrorExtensions
 	/// </summary>
 	public static TDestino ReflectWithFactory<TOrigem, TDestino>(
 		this TOrigem origem,
+		Func<TOrigem, TDestino> factory)
+	{
+		return origem.ReflectWithFactory(GetMirrorOrDefault(), factory);
+	}
+
+	public static TDestino ReflectWithFactory<TOrigem, TDestino>(
+		this TOrigem origem,
 		IMirror mirror,
 		Func<TOrigem, TDestino> factory)
 	{
 		if (origem == null)
 			throw new ArgumentNullException(nameof(origem));
-		if (mirror == null)
-			throw new ArgumentNullException(nameof(mirror));
+		mirror = GetMirrorOrDefault(mirror);
 		if (factory == null)
 			throw new ArgumentNullException(nameof(factory));
 
 		return mirror.ReflectWithFactory(origem, factory);
 	}
 
+	public static TDestino ReflectUsingFactory<TDestino>(this object origem)
+	{
+		return origem.ReflectUsingFactory<TDestino>(GetMirrorOrDefault());
+	}
+
 	public static TDestino ReflectUsingFactory<TDestino>(this object origem, IMirror mirror)
 	{
 		if (origem == null)
 			throw new ArgumentNullException(nameof(origem));
-		if (mirror == null)
-			throw new ArgumentNullException(nameof(mirror));
+		mirror = GetMirrorOrDefault(mirror);
 
 		var origemType = origem.GetType();
 		var destinoType = typeof(TDestino);
