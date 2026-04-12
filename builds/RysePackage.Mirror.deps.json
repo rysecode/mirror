@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "RysePackage.Mirror/1.1.1.0": {
+      "RysePackage.Mirror/1.1.2.0": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5"
         },
@@ -25,7 +25,7 @@
     }
   },
   "libraries": {
-    "RysePackage.Mirror/1.1.1.0": {
+    "RysePackage.Mirror/1.1.2.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

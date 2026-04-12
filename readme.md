@@ -38,6 +38,7 @@ Recursos suportados atualmente:
 - objetos complexos profundamente aninhados
 - `IgnoreNullValues`
 - `MaxDepth`
+- detalhamento de exceções com caminho, etapa e metadados de membro
 - profiles
 - methods de extensão
 - ignore de propriedades por atributo e por expressão
@@ -375,7 +376,20 @@ var config = new MirrorConfiguration
 
 ## Tratamento de Exceções
 
-Erros de mapeamento são encapsulados em `MirrorException`, preservando a exceção interna original.
+Erros de mapeamento são encapsulados em `MirrorException`, preservando a exceção interna original e adicionando contexto útil para diagnóstico.
+
+Além da mensagem detalhada, a exceção agora expõe informações como:
+
+- `Stage`
+- `Path`
+- `SourceType`
+- `DestinationType`
+- `MemberName`
+- `SourceMemberType`
+- `DestinationMemberType`
+- `SourceValue`
+
+Isso facilita identificar exatamente onde a falha aconteceu, inclusive em grafos profundos com listas e dicionários.
 
 ```csharp
 try
@@ -385,8 +399,21 @@ try
 catch (MirrorException ex)
 {
     Console.WriteLine(ex.Message);
+    Console.WriteLine(ex.Path);
+    Console.WriteLine(ex.Stage);
+    Console.WriteLine(ex.MemberName);
     Console.WriteLine(ex.InnerException?.Message);
 }
+```
+
+Exemplo de mensagem:
+
+```text
+Erro ao mapear a propriedade 'Cidade' em 'Cliente.Endereco.Cidade'.
+Origem: EnderecoDto.Cidade (String).
+Destino: Endereco.Cidade (Int32).
+Etapa: PropertyMapping.
+Valor atual: "São Paulo".
 ```
 
 ## Quando Usar

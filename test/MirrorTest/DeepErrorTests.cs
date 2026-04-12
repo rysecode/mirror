@@ -45,8 +45,10 @@ public class DeepErrorTests
 		Assert.Contains("Pessoa", exception.InnerException!.Message);
 		Assert.IsType<MirrorException>(exception.InnerException.InnerException);
 		Assert.Contains("Contatos", exception.InnerException.InnerException!.Message);
-		Assert.IsType<InvalidOperationException>(exception.InnerException.InnerException.InnerException);
-		Assert.Contains("Contato inválido", exception.InnerException.InnerException.InnerException!.Message);
+		Assert.IsType<MirrorException>(exception.InnerException.InnerException.InnerException);
+		Assert.Contains("Contatos[0]", exception.InnerException.InnerException.InnerException!.Message);
+		Assert.IsType<InvalidOperationException>(exception.InnerException.InnerException.InnerException.InnerException);
+		Assert.Contains("Contato inválido", exception.InnerException.InnerException.InnerException.InnerException!.Message);
 	}
 
 	[Fact]
@@ -91,7 +93,9 @@ public class DeepErrorTests
 		Assert.Contains("Pessoa", exception.InnerException!.Message);
 		Assert.IsType<MirrorException>(exception.InnerException.InnerException);
 		Assert.Contains("ContatosPorCategoria", exception.InnerException.InnerException!.Message);
-		Assert.IsType<InvalidOperationException>(exception.InnerException.InnerException.InnerException);
-		Assert.Contains("Contato inválido em mapa", exception.InnerException.InnerException.InnerException!.Message);
+		Assert.IsType<MirrorException>(exception.InnerException.InnerException.InnerException);
+		Assert.Contains("ContatosPorCategoria[principal][0]", exception.InnerException.InnerException.InnerException!.Message);
+		Assert.IsType<InvalidOperationException>(exception.InnerException.InnerException.InnerException.InnerException);
+		Assert.Contains("Contato inválido em mapa", exception.InnerException.InnerException.InnerException.InnerException!.Message);
 	}
 }

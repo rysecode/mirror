@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
@@ -19,10 +19,32 @@
 catch (MirrorException ex)
 {
     Console.WriteLine(ex.Message);
+    Console.WriteLine(ex.Path);
+    Console.WriteLine(ex.Stage);
+    Console.WriteLine(ex.MemberName);
     Console.WriteLine(ex.InnerException?.Message);
 }
 </code></pre>
-            <p>Falhas de mapeamento são encapsuladas em <code>MirrorException</code>, preservando a exceção original.</p>
+            <p>Falhas de mapeamento são encapsuladas em <code>MirrorException</code>, preservando a exceção original e acrescentando contexto suficiente para localizar com precisão onde o problema aconteceu.</p>
+            <p>A exceção expõe propriedades como <code>Stage</code>, <code>Path</code>, <code>SourceType</code>, <code>DestinationType</code>, <code>MemberName</code>, <code>SourceMemberType</code>, <code>DestinationMemberType</code> e <code>SourceValue</code>.</p>
+        </section>
+        <section>
+            <h2>Detalhamento por Caminho</h2>
+            <p>O caminho do erro acompanha a navegação do grafo. Isso significa que o diagnóstico deixa claro se a falha ocorreu em uma propriedade simples, item de coleção, valor de dicionário ou objeto aninhado.</p>
+            <ul>
+                <li><code>Endereco.Cidade</code> para objeto aninhado</li>
+                <li><code>Contatos[0]</code> para item de lista</li>
+                <li><code>ContatosPorCategoria[principal][0]</code> para listas dentro de dicionário</li>
+                <li><code>Itens[principal]</code> para valor de dicionário</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Exemplo de Mensagem</h2>
+<pre><code>Erro ao mapear a propriedade 'Cidade' em 'Cliente.Endereco.Cidade'.
+Origem: EnderecoDto.Cidade (String).
+Destino: Endereco.Cidade (Int32).
+Etapa: PropertyMapping.
+Valor atual: "São Paulo".</code></pre>
         </section>
         <section>
             <h2>Proteção contra Recursão Excessiva</h2>
@@ -35,6 +57,7 @@ catch (MirrorException ex)
                 <li>use <code>IgnoreNullValues</code> em updates parciais</li>
                 <li>para construções de domínio complexas, prefira factories</li>
                 <li>escreva testes específicos para cenários ambíguos do projeto</li>
+                <li>em fluxos críticos, registre também <code>Path</code> e <code>Stage</code> no log da aplicação</li>
             </ul>
         </section>
     </main>

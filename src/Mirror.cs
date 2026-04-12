@@ -1,4 +1,4 @@
-using Mirror.Exceptions;
+﻿using Mirror.Exceptions;
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -82,6 +82,10 @@ public class Mirror : IMirror
 
 		foreach (var propDestino in propriedadesDestino)
 		{
+			PropertyInfo? propOrigem = null;
+			object? valorOrigem = null;
+			var propertyContext = context.CreateProperty(propDestino.Name);
+
 			try
 			{
 				if (ShouldIgnoreProperty(propDestino, ignoredMembers))
@@ -91,16 +95,17 @@ public class Mirror : IMirror
 				var possuiTransformacao = _configuration.Transformations.TryGetValue(reflectionKey, out var transformations) &&
 					transformations.TryGetValue(propDestino.Name, out transform);
 
-				object? valorOrigem;
 				if (possuiTransformacao)
 				{
 					valorOrigem = transform!(origem!);
 				}
 				else
 				{
-					if (!propriedadesOrigem.TryGetValue(propDestino.Name, out var propOrigem))
+					if (!propriedadesOrigem.TryGetValue(propDestino.Name, out var propertyFromSource))
 						continue;
-					valorOrigem = propOrigem.GetValue(origem);
+
+					propOrigem = propertyFromSource;
+					valorOrigem = propertyFromSource.GetValue(origem);
 				}
 
 				if (valorOrigem == null && _configuration.IgnoreNullValues)
@@ -108,7 +113,7 @@ public class Mirror : IMirror
 
 				if (IsDictionaryType(propDestino.PropertyType))
 				{
-					var dicionarioMapeado = MapearDicionario(valorOrigem, propDestino.PropertyType, context);
+					var dicionarioMapeado = MapearDicionario(valorOrigem, propDestino.PropertyType, propertyContext);
 					if (dicionarioMapeado != null || !_configuration.IgnoreNullValues)
 						propDestino.SetValue(destino, dicionarioMapeado);
 				}
@@ -116,7 +121,7 @@ public class Mirror : IMirror
 					propDestino.PropertyType != typeof(string) &&
 					propDestino.PropertyType != typeof(byte[]))
 				{
-					var listaMapeada = MapearLista(valorOrigem as IEnumerable, propDestino.PropertyType, context);
+					var listaMapeada = MapearLista(valorOrigem as IEnumerable, propDestino.PropertyType, propertyContext);
 					if (listaMapeada != null || !_configuration.IgnoreNullValues)
 						propDestino.SetValue(destino, listaMapeada);
 				}
@@ -132,8 +137,8 @@ public class Mirror : IMirror
 					var destinoAtual = propDestino.GetValue(destino);
 					var possuiFactory = _configuration.Factories.ContainsKey((valorOrigem.GetType(), propDestino.PropertyType));
 					var objetoMapeado = !possuiFactory && destinoAtual != null && propDestino.PropertyType.IsInstanceOfType(destinoAtual)
-						? MapearObjetoEmInstanciaExistente(valorOrigem, destinoAtual, propDestino.PropertyType, context.CreateChild(), ignoredMembers)
-						: MapearObjeto(valorOrigem, propDestino.PropertyType, context.CreateChild(), ignoredMembers);
+						? MapearObjetoEmInstanciaExistente(valorOrigem, destinoAtual, propDestino.PropertyType, propertyContext.CreateChild(), ignoredMembers)
+						: MapearObjeto(valorOrigem, propDestino.PropertyType, propertyContext.CreateChild(), ignoredMembers);
 					if (objetoMapeado != null || !_configuration.IgnoreNullValues)
 						propDestino.SetValue(destino, objetoMapeado);
 				}
@@ -144,7 +149,15 @@ public class Mirror : IMirror
 			}
 			catch (Exception ex)
 			{
-				throw new MirrorException($"Erro ao mapear propriedade '{propDestino.Name}'", ex);
+				throw CreatePropertyMappingException(
+					ex,
+					typeof(TOrigem),
+					typeof(TDestino),
+					propOrigem,
+					propDestino,
+					valorOrigem,
+					propertyContext,
+					"PropertyMapping");
 			}
 		}
 	}
@@ -163,7 +176,16 @@ public class Mirror : IMirror
 		{
 			var key = (origem.GetType(), tipoDestino);
 			if (_configuration.Factories.TryGetValue(key, out var factory))
-				return factory(origem);
+			{
+				try
+				{
+					return factory(origem);
+				}
+				catch (Exception ex)
+				{
+					throw CreateOperationException(ex, "Factory", context, origem.GetType(), tipoDestino, sourceValue: origem);
+				}
+			}
 
 			var destino = Activator.CreateInstance(tipoDestino);
 			if (destino == null)
@@ -178,6 +200,14 @@ public class Mirror : IMirror
 		catch (TargetInvocationException ex)
 		{
 			throw ex.InnerException ?? ex;
+		}
+		catch (MirrorException)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			throw CreateOperationException(ex, "ObjectMapping", context, origem.GetType(), tipoDestino, sourceValue: origem);
 		}
 		finally
 		{
@@ -201,6 +231,14 @@ public class Mirror : IMirror
 		catch (TargetInvocationException ex)
 		{
 			throw ex.InnerException ?? ex;
+		}
+		catch (MirrorException)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			throw CreateOperationException(ex, "ExistingObjectMapping", context, origem.GetType(), tipoDestino, sourceValue: origem);
 		}
 		finally
 		{
@@ -244,6 +282,7 @@ public class Mirror : IMirror
 
 		foreach (var item in listaOrigem)
 		{
+			var itemContext = context.CreateCollectionItem(itensMapeados.Count);
 			if (item == null)
 			{
 				if (!tipoItem.IsValueType || Nullable.GetUnderlyingType(tipoItem) != null)
@@ -253,11 +292,18 @@ public class Mirror : IMirror
 
 			if (IsSimpleType(tipoItem))
 			{
-				itensMapeados.Add(item);
+				try
+				{
+					itensMapeados.Add(item);
+				}
+				catch (Exception ex)
+				{
+					throw CreateOperationException(ex, "CollectionItemAssignment", itemContext, item.GetType(), tipoItem, sourceValue: item);
+				}
 				continue;
 			}
 
-			var itemMapeado = MapearObjeto(item, tipoItem, context.CreateChild(), []);
+			var itemMapeado = MapearObjeto(item, tipoItem, itemContext.CreateChild(), []);
 			if (itemMapeado != null)
 				itensMapeados.Add(itemMapeado);
 		}
@@ -307,8 +353,10 @@ public class Mirror : IMirror
 
 		foreach (var (chaveOrigem, valorOrigem) in EnumerarEntradasDeDicionario(dicionarioOrigem))
 		{
-			var chaveMapeada = MapearValorDeDicionario(chaveOrigem, tipoChaveDestino, context.CreateChild());
-			var valorMapeado = MapearValorDeDicionario(valorOrigem, tipoValorDestino, context.CreateChild());
+			var keyContext = context.CreateDictionaryKey(chaveOrigem);
+			var valueContext = context.CreateDictionaryValue(chaveOrigem);
+			var chaveMapeada = MapearValorDeDicionario(chaveOrigem, tipoChaveDestino, keyContext.CreateChild());
+			var valorMapeado = MapearValorDeDicionario(valorOrigem, tipoValorDestino, valueContext.CreateChild());
 
 			if (chaveMapeada == null && tipoChaveDestino.IsValueType && Nullable.GetUnderlyingType(tipoChaveDestino) == null)
 				continue;
@@ -316,7 +364,14 @@ public class Mirror : IMirror
 			if (valorMapeado == null && tipoValorDestino.IsValueType && Nullable.GetUnderlyingType(tipoValorDestino) == null)
 				continue;
 
-			addMethod.Invoke(dicionarioTemporario, new[] { chaveMapeada, valorMapeado });
+			try
+			{
+				addMethod.Invoke(dicionarioTemporario, new[] { chaveMapeada, valorMapeado });
+			}
+			catch (Exception ex)
+			{
+				throw CreateOperationException(ex, "DictionaryAdd", valueContext, chaveOrigem?.GetType(), tipoValorDestino, sourceValue: valorOrigem);
+			}
 		}
 
 		if (tipoDicionarioDestino.IsAssignableFrom(tipoDictionary))
@@ -526,9 +581,9 @@ public class Mirror : IMirror
 			{
 				return Convert.ChangeType(valorOrigem, tipoDestino);
 			}
-			catch
+			catch (Exception ex)
 			{
-				return valorOrigem;
+				throw CreateOperationException(ex, "ValueConversion", context, valorOrigem.GetType(), tipoDestino, sourceValue: valorOrigem);
 			}
 		}
 
@@ -558,7 +613,7 @@ public class Mirror : IMirror
 		{
 			MemberExpression member => member.Member.Name,
 			UnaryExpression { Operand: MemberExpression member } => member.Member.Name,
-			_ => throw new ArgumentException("A express�o deve apontar para uma propriedade.", nameof(expression))
+			_ => throw new ArgumentException("A expressão deve apontar para uma propriedade.", nameof(expression))
 		};
 	}
 
@@ -632,29 +687,141 @@ public class Mirror : IMirror
 			type.IsValueType;
 	}
 
+	private static MirrorException CreatePropertyMappingException(
+		Exception exception,
+		Type sourceType,
+		Type destinationType,
+		PropertyInfo? sourceProperty,
+		PropertyInfo destinationProperty,
+		object? sourceValue,
+		MappingContext context,
+		string stage)
+	{
+		var sourceMember = sourceProperty == null
+			? "transformação customizada"
+			: $"{sourceProperty.Name} ({GetFriendlyTypeName(sourceProperty.PropertyType)})";
+		var destinationMember = $"{destinationProperty.Name} ({GetFriendlyTypeName(destinationProperty.PropertyType)})";
+		var message =
+			$"Erro ao mapear a propriedade '{destinationProperty.Name}' em '{context.Path}'. " +
+			$"Origem: {GetFriendlyTypeName(sourceType)}.{sourceMember}. " +
+			$"Destino: {GetFriendlyTypeName(destinationType)}.{destinationMember}. " +
+			$"Etapa: {stage}. " +
+			$"Valor atual: {FormatValue(sourceValue)}.";
+
+		return new MirrorException(
+			message,
+			exception,
+			stage,
+			context.Path,
+			sourceType,
+			destinationType,
+			destinationProperty.Name,
+			sourceProperty?.PropertyType,
+			destinationProperty.PropertyType,
+			sourceValue);
+	}
+
+	private static MirrorException CreateOperationException(
+		Exception exception,
+		string stage,
+		MappingContext context,
+		Type? sourceType = null,
+		Type? destinationType = null,
+		string? memberName = null,
+		Type? sourceMemberType = null,
+		Type? destinationMemberType = null,
+		object? sourceValue = null)
+	{
+		var message =
+			$"Erro durante a etapa '{stage}' em '{context.Path}'. " +
+			$"Origem: {GetFriendlyTypeName(sourceType)}. " +
+			$"Destino: {GetFriendlyTypeName(destinationType)}. " +
+			$"Valor atual: {FormatValue(sourceValue)}.";
+
+		return new MirrorException(
+			message,
+			exception,
+			stage,
+			context.Path,
+			sourceType,
+			destinationType,
+			memberName,
+			sourceMemberType,
+			destinationMemberType,
+			sourceValue);
+	}
+
+	private static string GetFriendlyTypeName(Type? type)
+	{
+		if (type == null)
+			return "(desconhecido)";
+
+		if (!type.IsGenericType)
+			return type.Name;
+
+		var genericName = type.Name[..type.Name.IndexOf('`')];
+		var genericArguments = string.Join(", ", type.GetGenericArguments().Select(GetFriendlyTypeName));
+		return $"{genericName}<{genericArguments}>";
+	}
+
+	private static string FormatValue(object? value)
+	{
+		if (value == null)
+			return "null";
+
+		return value switch
+		{
+			string text => $"\"{text}\"",
+			_ => $"{value} ({GetFriendlyTypeName(value.GetType())})"
+		};
+	}
+
 	private sealed class MappingContext
 	{
 		private readonly HashSet<object> _path;
 
-		private MappingContext(int depth, int maxDepth, HashSet<object> path)
+		private MappingContext(int depth, int maxDepth, HashSet<object> path, string currentPath)
 		{
 			Depth = depth;
 			MaxDepth = maxDepth;
 			_path = path;
+			Path = currentPath;
 		}
 
 		public int Depth { get; }
 		public int MaxDepth { get; }
+		public string Path { get; }
 		public bool MaxDepthReached => Depth > MaxDepth;
 
 		public static MappingContext Create(int maxDepth)
 		{
-			return new MappingContext(0, Math.Max(0, maxDepth), new HashSet<object>(ReferenceEqualityComparer.Instance));
+			return new MappingContext(0, Math.Max(0, maxDepth), new HashSet<object>(ReferenceEqualityComparer.Instance), "$");
 		}
 
 		public MappingContext CreateChild()
 		{
-			return new MappingContext(Depth + 1, MaxDepth, _path);
+			return new MappingContext(Depth + 1, MaxDepth, _path, Path);
+		}
+
+		public MappingContext CreateProperty(string propertyName)
+		{
+			var nextPath = Path == "$" ? propertyName : $"{Path}.{propertyName}";
+			return new MappingContext(Depth, MaxDepth, _path, nextPath);
+		}
+
+		public MappingContext CreateCollectionItem(int index)
+		{
+			return new MappingContext(Depth, MaxDepth, _path, $"{Path}[{index}]");
+		}
+
+		public MappingContext CreateDictionaryKey(object? key)
+		{
+			return new MappingContext(Depth, MaxDepth, _path, $"{Path}[key:{FormatPathToken(key)}]");
+		}
+
+		public MappingContext CreateDictionaryValue(object? key)
+		{
+			return new MappingContext(Depth, MaxDepth, _path, $"{Path}[{FormatPathToken(key)}]");
 		}
 
 		public bool TryEnter(object? instance)
@@ -676,6 +843,11 @@ public class Mirror : IMirror
 		private static bool RequiresTracking(Type type)
 		{
 			return !type.IsValueType && type != typeof(string);
+		}
+
+		private static string FormatPathToken(object? token)
+		{
+			return token?.ToString() ?? "null";
 		}
 	}
 }

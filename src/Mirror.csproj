@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Mirror</Title>
-    <Version>1.1.1.0</Version>
+    <Version>1.1.2.0</Version>
     <Authors>RYSECODE</Authors>
     <Company>RYSECODE</Company>
     <PackageIcon>mirror.png</PackageIcon>

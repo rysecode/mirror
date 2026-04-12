@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
@@ -19,9 +19,30 @@
 catch (MirrorException ex)
 {
     Console.WriteLine(ex.Message);
+    Console.WriteLine(ex.Path);
+    Console.WriteLine(ex.Stage);
 }
 </code></pre>
-            <p>Os métodos seguros ajudam a encapsular falhas de mapeamento dentro de <code>MirrorException</code>, tornando o tratamento mais previsível na aplicação.</p>
+            <p>Os métodos seguros ajudam a encapsular falhas de mapeamento dentro de <code>MirrorException</code>, tornando o tratamento mais previsível na aplicação e muito mais rico em contexto para suporte e observabilidade.</p>
+        </section>
+        <section>
+            <h2>O que Agora Fica Disponível</h2>
+            <ul>
+                <li>o caminho completo da falha no grafo por meio de <code>Path</code></li>
+                <li>a etapa do pipeline em <code>Stage</code></li>
+                <li>o membro envolvido em <code>MemberName</code></li>
+                <li>os tipos de origem e destino, incluindo tipos de membro</li>
+                <li>o valor que estava sendo processado quando a falha aconteceu</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Exemplos de Caminho</h2>
+            <ul>
+                <li><code>Endereco.Cidade</code></li>
+                <li><code>Contatos[0]</code></li>
+                <li><code>Itens[principal]</code></li>
+                <li><code>ContatosPorCategoria[principal][0]</code></li>
+            </ul>
         </section>
         <section>
             <h2>Quando Escrever Testes Específicos</h2>
@@ -30,6 +51,7 @@ catch (MirrorException ex)
                 <li>quando coleções e dicionários se misturam em grafos profundos</li>
                 <li>quando existem regras contextuais de ignore</li>
                 <li>quando o projeto depende de preservação exata de estado em objetos existentes</li>
+                <li>quando o time precisa garantir mensagens de erro claras para suporte operacional</li>
             </ul>
         </section>
     </main>
