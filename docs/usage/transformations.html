@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Transformações</title>
+</head>
+<body>
+    <header>
+        <h1>Aplicar Transformações Customizadas</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p>Transformações permitem que uma propriedade do destino seja montada a partir de uma regra explícita sobre o objeto de origem. Esse recurso é indicado quando o valor não deve ser uma cópia literal.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>var configuration = new MirrorConfiguration();
+
+configuration.CreateReflection&lt;User, UserDto&gt;()
+    .ForMember(dto =&gt; dto.Name, user =&gt; user.Name.ToUpperInvariant());
+
+var mirror = new Mirror.Mirror(configuration);
+var dto = mirror.Reflect&lt;User, UserDto&gt;(user);
+</code></pre>
+        </section>
+        <section>
+            <h2>Cenários Típicos</h2>
+            <ul>
+                <li>normalização de texto</li>
+                <li>junção de campos</li>
+                <li>formatação de propriedades para exibição</li>
+                <li>adaptação simples entre contratos diferentes</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

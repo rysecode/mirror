@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Profiles</title>
+</head>
+<body>
+    <header>
+        <h1>Organizar Regras com Profiles</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p>Profiles ajudam a centralizar regras de mapeamento em classes dedicadas. Esse formato reduz dispersão de configuração e facilita manutenção quando o projeto tem vários pares de tipos e transformações específicas.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>public class UserProfile : MirrorProfile
+{
+    public override void Configure(IMirrorProfileExpression expression)
+    {
+        expression.CreateReflection&lt;User, UserDto&gt;()
+            .ForMember&lt;User, UserDto, string&gt;(
+                dto =&gt; dto.Name,
+                user =&gt; $"{user.Name} - ACTIVE"
+            );
+    }
+}
+</code></pre>
+        </section>
+        <section>
+            <h2>Vantagens</h2>
+            <ul>
+                <li>melhor organização das regras</li>
+                <li>facilidade de descoberta por assembly</li>
+                <li>separação entre pipeline de mapeamento e código de aplicação</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

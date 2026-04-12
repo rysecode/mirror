@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Uso com DI</title>
+</head>
+<body>
+    <header>
+        <h1>Consumir o Mirror via Injeção de Dependência</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Registro</h2>
+<pre><code>builder.Services.AddMirror(config =&gt;
+{
+    config.IgnoreNullValues = true;
+    config.MaxDepth = 10;
+});
+</code></pre>
+        </section>
+        <section>
+            <h2>Consumo</h2>
+<pre><code>public class UserService
+{
+    private readonly IMirror _mirror;
+
+    public UserService(IMirror mirror)
+    {
+        _mirror = mirror;
+    }
+
+    public UserDto Execute(User user)
+    {
+        return _mirror.Reflect&lt;User, UserDto&gt;(user);
+    }
+}
+</code></pre>
+        </section>
+        <section>
+            <h2>Quando Preferir DI</h2>
+            <ul>
+                <li>quando a aplicação já usa container em toda a arquitetura</li>
+                <li>quando a configuração do Mirror deve ser centralizada</li>
+                <li>quando profiles e regras globais precisam ser aplicados de forma uniforme</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

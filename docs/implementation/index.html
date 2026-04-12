@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Implementação</title>
+</head>
+<body>
+    <header>
+        <h1>Implementação</h1>
+        <p><a href="../index.html">Voltar para a página inicial</a></p>
+    </header>
+    <nav>
+        <h2>Tópicos desta seção</h2>
+        <ul>
+            <li><a href="pipeline.html">Pipeline Interno de Mapeamento</a></li>
+            <li><a href="configuration.html">Configuração e Regras</a></li>
+            <li><a href="collections.html">Coleções e Dicionários</a></li>
+            <li><a href="dependency-injection.html">Integração com Injeção de Dependência</a></li>
+            <li><a href="exceptions.html">Tratamento de Exceções e Limites</a></li>
+        </ul>
+    </nav>
+    <main>
+        <section>
+            <h2>Visão Geral</h2>
+            <p>A implementação do Mirror foi organizada para fornecer um fluxo de mapeamento coerente tanto para casos simples quanto para cenários profundos. A biblioteca usa reflexão sobre propriedades públicas de instância, aplica regras configuradas e decide automaticamente como materializar o destino com base no tipo analisado.</p>
+            <p>Essa seção documenta não apenas o que a API faz, mas também como o comportamento é decidido internamente. Isso ajuda na manutenção da biblioteca, no diagnóstico de comportamento inesperado e na definição de novos recursos.</p>
+        </section>
+        <section>
+            <h2>Resumo do Pipeline</h2>
+            <ol>
+                <li>a configuração ativa é avaliada</li>
+                <li>o tipo de destino é analisado</li>
+                <li>propriedades ignoradas são filtradas</li>
+                <li>transformações e factories são verificadas</li>
+                <li>valores simples são copiados diretamente</li>
+                <li>coleções, mapas e objetos complexos seguem pipelines dedicados</li>
+                <li>limites como <code>IgnoreNullValues</code>, <code>MaxDepth</code> e proteção contra ciclos são respeitados</li>
+            </ol>
+        </section>
+    </main>
+</body>
+</html>

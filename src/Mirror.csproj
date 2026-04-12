@@ -6,19 +6,20 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>Mirror</Title>
-    <Version>1.0.0.0</Version>
+    <Version>1.1.1.0</Version>
     <Authors>RYSECODE</Authors>
     <Company>RYSECODE</Company>
     <PackageIcon>mirror.png</PackageIcon>
     <PackageReadmeFile>mirror.md</PackageReadmeFile>
     <Description>Mirror é uma biblioteca leve de mapeamento objeto-objeto para .NET, criada como uma alternativa simples e intuitiva ao AutoMapper. O nome "Mirror" reflete perfeitamente seu propósito: espelhar/refletir propriedades de um objeto para outro, como se fosse um espelho.</Description>
-    <Copyright>Copyright © RYSECODE 2024</Copyright>
+    <Copyright>Copyright © RYSECODE 2026</Copyright>
     <PackageProjectUrl>https://github.com/rysecode/mirror</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rysecode/mirror</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>mapping object-mapper object-to-object reflection mirror automapper-alternative</PackageTags>
     <NeutralLanguage>pt-BR</NeutralLanguage>
     <AssemblyName>RysePackage.Mirror</AssemblyName>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="assets\icons\mirror.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

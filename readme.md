@@ -1,753 +1,409 @@
-﻿# Mirror - Biblioteca de Mapeamento de Objetos para .NET
+# Mirror
 
-## 📋 Índice
-- [Visão Geral](#visão-geral)
-- [Instalação](#instalação)
-- [Conceitos Fundamentais](#conceitos-fundamentais)
-- [Guia de Uso](#guia-de-uso)
-- [Profiles e Configuração](#profiles-e-configuração)
-- [Injeção de Dependência](#injeção-de-dependência)
-- [Exemplos Práticos](#exemplos-práticos)
-- [Melhores Práticas](#melhores-práticas)
-- [API Reference](#api-reference)
-- [Contribuição](#contribuição)
+Mirror é uma biblioteca de mapeamento objeto-objeto para .NET, criada para oferecer uma experiência simples, explícita e flexível na conversão entre modelos de domínio, DTOs, requests e responses.
 
-## Visão Geral
+## Objetivo
 
-### O que é o Mirror?
+O objetivo do Mirror é reduzir código repetitivo de cópia entre objetos sem sacrificar clareza. A biblioteca foi desenhada para cenários comuns de aplicações .NET onde precisamos:
 
-Mirror é uma biblioteca leve de mapeamento objeto-objeto para .NET, criada como uma alternativa simples e intuitiva ao AutoMapper. O nome "Mirror" reflete perfeitamente seu propósito: espelhar/refletir propriedades de um objeto para outro, como se fosse um espelho.
+- mapear propriedades de mesmo nome entre dois tipos
+- atualizar um objeto de destino já existente
+- tratar objetos aninhados, listas e dicionários
+- aplicar transformações em propriedades específicas
+- usar factories para tipos com regras de criação próprias
+- integrar o mapeamento com injeção de dependência
 
-### Objetivos do Projeto
+O Mirror prioriza uma API pequena e previsível. Em vez de esconder o comportamento atrás de muitas convenções implícitas, ele busca entregar um fluxo fácil de entender, testar e manter.
 
-- **Simplicidade**: API intuitiva e fácil de aprender
-- **Performance**: Mínimo overhead com cache de expressões
-- **Flexibilidade**: Suporte a transformações customizadas
-- **Integração**: Fácil integração com DI container do .NET
-- **Leveza**: Sem dependências externas desnecessárias
+## Implementação
 
-### Principais Características
+O Mirror funciona com base em reflexão sobre propriedades públicas de instância.
 
-- ✅ Mapeamento automático por convenção (nome/tipo)
-- ✅ Suporte a tipos anuláveis (Nullable)
-- ✅ Transformações customizadas
-- ✅ Sistema de Profiles para organização
-- ✅ Cache de reflexão para performance
-- ✅ Injeção de dependência nativa
-- ✅ Suporte a coleções (IEnumerable)
-- ✅ Tratamento de exceções específico
-- ✅ API fluente e expressiva
+Durante o mapeamento, a biblioteca:
+
+1. localiza propriedades compatíveis entre origem e destino por nome
+2. aplica transformações configuradas, quando existirem
+3. respeita propriedades ignoradas por atributo ou por expressão
+4. copia valores simples diretamente
+5. materializa coleções e dicionários quando necessário
+6. mapeia recursivamente objetos complexos
+7. usa factories registradas quando um tipo precisa de criação customizada
+
+Recursos suportados atualmente:
+
+- mapeamento entre objetos simples
+- mapeamento em novo objeto ou em instância já existente
+- listas, arrays e várias coleções genéricas
+- `Dictionary`, `SortedList`, `ReadOnlyDictionary`, `ConcurrentDictionary`, `ImmutableDictionary`, `Hashtable` e `IDictionary`
+- objetos complexos profundamente aninhados
+- `IgnoreNullValues`
+- `MaxDepth`
+- profiles
+- methods de extensão
+- ignore de propriedades por atributo e por expressão
 
 ## Instalação
 
-### Via NuGet Package Manager
-```powershell
-Install-Package Mirror
-```
+### .NET CLI
 
-### Via .NET CLI
 ```bash
 dotnet add package Mirror
 ```
 
-### Via Package Reference
+### PackageReference
+
 ```xml
-<PackageReference Include="Mirror" Version="1.0.0" />
+<PackageReference Include="Mirror" Version="1.0.1" />
 ```
 
-## Conceitos Fundamentais
+## Uso Básico
 
-### Como Funciona?
-
-O Mirror utiliza reflexão e express trees para copiar propriedades entre objetos. O processo básico é:
-
-1. **Análise**: Examina as propriedades públicas da origem e destino
-2. **Correspondência**: Compara por nome e tipo compatível
-3. **Cache**: Armazena os mapeamentos para operações futuras
-4. **Transformação**: Aplica regras customizadas quando configurado
-5. **Execução**: Copia os valores de origem para destino
-
-### Terminologia
-
-- **Reflection/Reflect**: Processo de espelhar/mapear objetos
-- **Origem**: Objeto de onde os dados são lidos
-- **Destino**: Objeto onde os dados são escritos
-- **Profile**: Classe que agrupa configurações de mapeamento
-- **Transformação**: Regra customizada para modificar valores
-
-## Guia de Uso
-
-### 1. Mapeamento Básico
+### Criando um novo objeto de destino
 
 ```csharp
 using Mirror;
 
-// Classes de exemplo
-public class Usuario
+public class User
 {
     public int Id { get; set; }
-    public string Nome { get; set; }
-    public string Email { get; set; }
-    public DateTime DataNascimento { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }
 
-public class UsuarioDto
+public class UserDto
 {
     public int Id { get; set; }
-    public string Nome { get; set; }
-    public string Email { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }
 
-// Uso básico
 var mirror = new Mirror.Mirror();
-var usuario = new Usuario 
-{ 
-    Id = 1, 
-    Nome = "João", 
-    Email = "joao@email.com",
-    DataNascimento = DateTime.Now
-};
 
-var usuarioDto = mirror.Reflect<Usuario, UsuarioDto>(usuario);
-```
-
-### 2. Mapeamento com Objeto Existente
-
-```csharp
-// Reutilizando um objeto destino existente
-var usuarioDto = new UsuarioDto();
-mirror.Reflect(usuario, usuarioDto);
-```
-
-### 3. Mapeamento de Coleções
-
-```csharp
-var usuarios = new List<Usuario>
+var user = new User
 {
-    new Usuario { Id = 1, Nome = "João" },
-    new Usuario { Id = 2, Nome = "Maria" }
+    Id = 1,
+    Name = "Ana",
+    Email = "ana@company.com"
 };
 
-// Usando método de extensão
-var usuariosDto = mirror.ReflectAll<Usuario, UsuarioDto>(usuarios);
-
-// Ou manualmente com LINQ
-var usuariosDto = usuarios.Select(u => mirror.Reflect<Usuario, UsuarioDto>(u));
+var dto = mirror.Reflect<User, UserDto>(user);
 ```
 
-### 4. Transformações Customizadas
+### Atualizando um objeto já existente
 
 ```csharp
-var config = new MirrorConfiguration();
+var source = new User
+{
+    Id = 1,
+    Name = "Ana",
+    Email = "ana@company.com"
+};
 
-config.CreateReflection<Usuario, UsuarioDto>()
-    .ForMember(dto => dto.Nome, u => u.Nome.ToUpper())
-    .ForMember(dto => dto.Email, u => u.Email.ToLower());
+var destination = new UserDto
+{
+    Id = 99,
+    Name = "Original",
+    Email = "original@company.com"
+};
 
-var mirror = new Mirror.Mirror(config);
-var resultado = mirror.Reflect<Usuario, UsuarioDto>(usuario);
+mirror.Reflect(source, destination);
 ```
 
-### 5. Métodos de Extensão
+## Ignorando Propriedades
+
+O Mirror permite ignorar propriedades de duas formas.
+
+### 1. Por atributo
+
+```csharp
+using Mirror;
+
+public class HouseDto
+{
+    [MirrorNonReflect]
+    public string Name { get; set; } = string.Empty;
+
+    public int Doors { get; set; }
+    public int Windows { get; set; }
+}
+```
+
+Quando essa propriedade estiver no destino, o valor atual dela será preservado durante o `Reflect`.
+
+### 2. Por expressão na chamada
+
+```csharp
+var source = new House
+{
+    Name = "Lar",
+    Doors = 2,
+    Windows = 5
+};
+
+var destination = new HouseDto
+{
+    Name = "Apartamento",
+    Doors = 3,
+    Windows = 4
+};
+
+mirror.Reflect(source, destination, x => x.Name);
+mirror.Reflect(source, destination, x => x.Name, x => x.Windows);
+```
+
+Também é possível ignorar propriedades ao criar um novo objeto:
+
+```csharp
+var dto = mirror.Reflect<House, HouseDto>(source, x => x.Name);
+```
+
+## Transformações Customizadas
+
+Transformações permitem montar propriedades de destino com regras específicas.
+
+```csharp
+var configuration = new MirrorConfiguration();
+
+configuration.CreateReflection<User, UserDto>()
+    .ForMember(dto => dto.Name, user => user.Name.ToUpperInvariant());
+
+var mirror = new Mirror.Mirror(configuration);
+var dto = mirror.Reflect<User, UserDto>(user);
+```
+
+## Factory Methods
+
+Factories são úteis quando o destino não deve ser criado apenas com `new()`, ou quando existe uma regra de construção de domínio.
+
+```csharp
+var configuration = new MirrorConfiguration();
+
+configuration.AddFactory<CreateCompanyRequest, Company>(request =>
+    Company.Create(request.Name, request.Document)
+);
+
+var mirror = new Mirror.Mirror(configuration);
+
+var company = mirror.Reflect<CreateCompanyRequest, Company>(request);
+```
+
+Também é possível usar uma factory diretamente na chamada:
+
+```csharp
+var result = mirror.ReflectWithFactory(request, source =>
+    Company.Create(source.Name, source.Document)
+);
+```
+
+## Profiles
+
+Profiles ajudam a centralizar e organizar regras de mapeamento.
+
+```csharp
+using Mirror;
+
+public class UserProfile : MirrorProfile
+{
+    public override void Configure(IMirrorProfileExpression expression)
+    {
+        expression.CreateReflection<User, UserDto>()
+            .ForMember<User, UserDto, string>(
+                dto => dto.Name,
+                user => $"{user.Name} - ACTIVE"
+            );
+    }
+}
+```
+
+## Métodos de Extensão
+
+Além do uso direto com `IMirror`, o Mirror oferece extensões para uma sintaxe mais fluida.
+
+### Novo objeto com instância padrão
 
 ```csharp
 using Mirror.Extensions;
 
-// Extensão direta no objeto
-var usuarioDto = usuario.ReflectTo<UsuarioDto>(mirror);
-
-// Para coleções
-var usuariosDto = usuarios.ReflectAllTo<UsuarioDto>(mirror);
+var dto = user.Reflect<UserDto>();
 ```
 
-## Profiles e Configuração
-
-### Criando um Profile
+### Atualizando instância existente
 
 ```csharp
-using Mirror;
-
-public class UsuarioProfile : MirrorProfile
-{
-    public override void Configure(IMirrorProfileExpression expression)
-    {
-        expression.CreateReflection<Usuario, UsuarioDto>()
-            .ForMember<Usuario, UsuarioDto, string>(
-                dto => dto.NomeCompleto, 
-                u => $"{u.PrimeiroNome} {u.UltimoNome}"
-            )
-            .ForMember<Usuario, UsuarioDto, string>(
-                dto => dto.Status, 
-                u => u.Ativo ? "Ativo" : "Inativo"
-            )
-            .ForMember<Usuario, UsuarioDto, string>(
-                dto => dto.Idade,
-                u => CalcularIdade(u.DataNascimento)
-            );
-
-        expression.CreateReflection<Usuario, UsuarioListaDto>()
-            .ForMember<Usuario, UsuarioListaDto, string>(
-                dto => dto.Nome, 
-                u => u.PrimeiroNome
-            );
-    }
-
-    private int CalcularIdade(DateTime dataNascimento)
-    {
-        var hoje = DateTime.Today;
-        var idade = hoje.Year - dataNascimento.Year;
-        if (dataNascimento.Date > hoje.AddYears(-idade)) idade--;
-        return idade;
-    }
-}
-
-// Profile para Produto
-public class ProdutoProfile : MirrorProfile
-{
-    public override void Configure(IMirrorProfileExpression expression)
-    {
-        expression.CreateReflection<Produto, ProdutoDto>()
-            .ForMember<Produto, ProdutoDto, string>(
-                dto => dto.PrecoFormatado, 
-                p => p.Preco.ToString("C2")
-            )
-            .ForMember<Produto, ProdutoDto, string>(
-                dto => dto.Disponibilidade, 
-                p => p.EmEstoque ? "Em estoque" : "Fora de estoque"
-            );
-    }
-}
+user.ReflectTo(existingDto);
 ```
 
-### Configuração Múltipla de Profiles
+### Ignorando membros pela extensão
 
 ```csharp
-public class ApplicationProfile : MirrorProfile
-{
-    public override void Configure(IMirrorProfileExpression expression)
-    {
-        // Usuário mappings
-        expression.CreateReflection<Usuario, UsuarioDto>()
-            .ForMember(dto => dto.NomeCompleto, u => $"{u.PrimeiroNome} {u.UltimoNome}");
-
-        // Produto mappings
-        expression.CreateReflection<Produto, ProdutoDto>()
-            .ForMember(dto => dto.PrecoFormatado, p => p.Preco.ToString("C2"));
-
-        // Pedido mappings
-        expression.CreateReflection<Pedido, PedidoDto>()
-            .ForMember(dto => dto.ValorTotal, p => p.Itens.Sum(i => i.Valor));
-    }
-}
+user.ReflectTo(existingDto, x => x.Name);
 ```
+
+### Mapeando coleções
+
+```csharp
+var users = new List<User>
+{
+    new() { Id = 1, Name = "Ana" },
+    new() { Id = 2, Name = "Bruno" }
+};
+
+var dtos = users.ReflectAll<User, UserDto>().ToList();
+```
+
+### Configurando um Mirror padrão para as extensões
+
+```csharp
+using Mirror.Extensions;
+
+var configuration = new MirrorConfiguration();
+
+configuration.CreateReflection<User, UserDto>()
+    .ForMember(dto => dto.Name, user => user.Name.ToUpperInvariant());
+
+MirrorExtensions.SetDefaultMirror(new Mirror.Mirror(configuration));
+
+var dto = user.Reflect<UserDto>();
+
+MirrorExtensions.ResetDefaultMirror();
+```
+
+## Coleções e Dicionários
+
+O Mirror suporta o mapeamento de coleções simples e profundas, incluindo objetos complexos em múltiplos níveis.
+
+Exemplos de coleções suportadas:
+
+- `List<T>`
+- `ICollection<T>`
+- `IReadOnlyList<T>`
+- `Collection<T>`
+- `ObservableCollection<T>`
+- `ReadOnlyCollection<T>`
+- `ImmutableList<T>`
+- `ConcurrentBag<T>`
+- `LinkedList<T>`
+- `Queue<T>`
+- `Stack<T>`
+- arrays
+
+Exemplos de mapas suportados:
+
+- `Dictionary<TKey, TValue>`
+- `SortedList<TKey, TValue>`
+- `IReadOnlyDictionary<TKey, TValue>`
+- `ReadOnlyDictionary<TKey, TValue>`
+- `ConcurrentDictionary<TKey, TValue>`
+- `ImmutableDictionary<TKey, TValue>`
+- `Hashtable`
+- `IDictionary`
 
 ## Injeção de Dependência
 
-### Configuração no Program.cs (Minimal API)
+O pacote possui integração com `Microsoft.Extensions.DependencyInjection`.
+
+### Registro básico
 
 ```csharp
-using Mirror;
 using Mirror.DependencyInjection;
 
-var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddMirror(config =>
+{
+    config.IgnoreNullValues = true;
+    config.MaxDepth = 10;
+});
+```
 
-// Configuração simples
-builder.Services.AddMirror();
+### Registro com profiles
 
-// Configuração com profiles
+```csharp
+using Mirror.DependencyInjection;
+using System.Reflection;
+
 builder.Services.AddMirrorWithProfiles(
     configure: config =>
     {
-        // Configurações globais
-        config.SetMaxDepth(5);
-        config.IgnoreNullValues(true);
+        config.IgnoreNullValues = true;
+        config.MaxDepth = 10;
     },
-    assemblies: Assembly.GetExecutingAssembly()
+    Assembly.GetExecutingAssembly()
 );
-
-// Ou configuração separada
-builder.Services.AddMirror(config =>
-{
-    config.ConfigureProfiles(profiles =>
-    {
-        profiles.AddProfile<UsuarioProfile>();
-        profiles.AddProfile<ProdutoProfile>();
-    });
-});
-
-var app = builder.Build();
-
-// Aplica os profiles (opcional - geralmente automático)
-var profileApplier = app.Services.GetRequiredService<MirrorProfileApplier>();
-profileApplier.ApplyProfiles();
-
-app.MapGet("/usuario/{id}", async (int id, IMirror mirror) =>
-{
-    var usuario = await GetUsuario(id);
-    var usuarioDto = mirror.Reflect<Usuario, UsuarioDto>(usuario);
-    return Results.Ok(usuarioDto);
-});
-
-app.Run();
 ```
 
-### Configuração em Controllers Tradicionais
+Depois disso, basta injetar `IMirror`:
 
 ```csharp
-[ApiController]
-[Route("api/[controller]")]
-public class UsuariosController : ControllerBase
+public class UserService
 {
     private readonly IMirror _mirror;
-    private readonly IUsuarioRepository _repository;
 
-    public UsuariosController(IMirror mirror, IUsuarioRepository repository)
+    public UserService(IMirror mirror)
     {
         _mirror = mirror;
-        _repository = repository;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public UserDto Map(User user)
     {
-        var usuarios = await _repository.GetAllAsync();
-        var usuariosDto = _mirror.ReflectAll<Usuario, UsuarioListaDto>(usuarios);
-        return Ok(usuariosDto);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        var usuario = await _repository.GetByIdAsync(id);
-        if (usuario == null)
-            return NotFound();
-
-        var usuarioDto = _mirror.Reflect<Usuario, UsuarioDto>(usuario);
-        return Ok(usuarioDto);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create(UsuarioCreateDto createDto)
-    {
-        var usuario = _mirror.Reflect<UsuarioCreateDto, Usuario>(createDto);
-        await _repository.AddAsync(usuario);
-        
-        var usuarioDto = _mirror.Reflect<Usuario, UsuarioDto>(usuario);
-        return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuarioDto);
+        return _mirror.Reflect<User, UserDto>(user);
     }
 }
 ```
 
-## Exemplos Práticos
+## Comportamentos Importantes
 
-### Exemplo 1: Sistema de E-commerce
+### IgnoreNullValues
+
+Quando `IgnoreNullValues` está habilitado, valores `null` da origem não sobrescrevem o destino.
 
 ```csharp
-// Models
-public class Produto
+var config = new MirrorConfiguration
 {
-    public int Id { get; set; }
-    public string Nome { get; set; }
-    public string Descricao { get; set; }
-    public decimal Preco { get; set; }
-    public int QuantidadeEstoque { get; set; }
-    public DateTime DataCadastro { get; set; }
-    public bool Ativo { get; set; }
-    public Categoria Categoria { get; set; }
-}
-
-public class Categoria
-{
-    public int Id { get; set; }
-    public string Nome { get; set; }
-    public string Descricao { get; set; }
-}
-
-// DTOs
-public class ProdutoListaDto
-{
-    public int Id { get; set; }
-    public string Nome { get; set; }
-    public string PrecoFormatado { get; set; }
-    public string StatusEstoque { get; set; }
-    public string Categoria { get; set; }
-}
-
-public class ProdutoDetalheDto
-{
-    public int Id { get; set; }
-    public string Nome { get; set; }
-    public string Descricao { get; set; }
-    public decimal Preco { get; set; }
-    public string PrecoFormatado { get; set; }
-    public int QuantidadeEstoque { get; set; }
-    public string Status { get; set; }
-    public string DataCadastroFormatada { get; set; }
-    public CategoriaDto Categoria { get; set; }
-}
-
-public class CategoriaDto
-{
-    public int Id { get; set; }
-    public string Nome { get; set; }
-}
-
-// Profile
-public class EcommerceProfile : MirrorProfile
-{
-    public override void Configure(IMirrorProfileExpression expression)
-    {
-        expression.CreateReflection<Produto, ProdutoListaDto>()
-            .ForMember(dto => dto.PrecoFormatado, p => p.Preco.ToString("C2"))
-            .ForMember(dto => dto.StatusEstoque, p => 
-                p.QuantidadeEstoque > 0 ? $"Em estoque ({p.QuantidadeEstoque})" : "Fora de estoque")
-            .ForMember(dto => dto.Categoria, p => p.Categoria?.Nome ?? "Sem categoria");
-
-        expression.CreateReflection<Produto, ProdutoDetalheDto>()
-            .ForMember(dto => dto.PrecoFormatado, p => p.Preco.ToString("C2"))
-            .ForMember(dto => dto.Status, p => p.Ativo ? "Ativo" : "Inativo")
-            .ForMember(dto => dto.DataCadastroFormatada, 
-                p => p.DataCadastro.ToString("dd/MM/yyyy HH:mm"));
-
-        expression.CreateReflection<Categoria, CategoriaDto>();
-    }
-}
-
-// Service
-public class ProdutoService
-{
-    private readonly IMirror _mirror;
-    private readonly IProdutoRepository _repository;
-
-    public ProdutoService(IMirror mirror, IProdutoRepository repository)
-    {
-        _mirror = mirror;
-        _repository = repository;
-    }
-
-    public async Task<IEnumerable<ProdutoListaDto>> GetProdutosEmDestaque()
-    {
-        var produtos = await _repository.GetProdutosEmDestaque();
-        return _mirror.ReflectAll<Produto, ProdutoListaDto>(produtos);
-    }
-
-    public async Task<ProdutoDetalheDto> GetProdutoDetalhe(int id)
-    {
-        var produto = await _repository.GetByIdWithCategoria(id);
-        return _mirror.Reflect<Produto, ProdutoDetalheDto>(produto);
-    }
-}
+    IgnoreNullValues = true
+};
 ```
 
-### Exemplo 2: Sistema de Pedidos
+### MaxDepth
+
+Define a profundidade máxima de mapeamento para grafos complexos e ajuda a evitar recursão excessiva.
 
 ```csharp
-public class Pedido
+var config = new MirrorConfiguration
 {
-    public int Id { get; set; }
-    public string Codigo { get; set; }
-    public DateTime DataPedido { get; set; }
-    public Cliente Cliente { get; set; }
-    public List<ItemPedido> Itens { get; set; }
-    public decimal ValorTotal { get; set; }
-    public string Status { get; set; }
-}
-
-public class PedidoDto
-{
-    public int Id { get; set; }
-    public string Codigo { get; set; }
-    public string DataFormatada { get; set; }
-    public string ClienteNome { get; set; }
-    public int QuantidadeItens { get; set; }
-    public string ValorTotalFormatado { get; set; }
-    public string Status { get; set; }
-    public string StatusCor { get; set; }
-}
-
-public class PedidoProfile : MirrorProfile
-{
-    public override void Configure(IMirrorProfileExpression expression)
-    {
-        expression.CreateReflection<Pedido, PedidoDto>()
-            .ForMember(dto => dto.DataFormatada, 
-                p => p.DataPedido.ToString("dd/MM/yyyy"))
-            .ForMember(dto => dto.ClienteNome, 
-                p => p.Cliente?.Nome ?? "Cliente não informado")
-            .ForMember(dto => dto.QuantidadeItens, 
-                p => p.Itens?.Sum(i => i.Quantidade) ?? 0)
-            .ForMember(dto => dto.ValorTotalFormatado, 
-                p => p.ValorTotal.ToString("C2"))
-            .ForMember(dto => dto.StatusCor, p => 
-                p.Status switch
-                {
-                    "Aguardando" => "yellow",
-                    "Pago" => "green",
-                    "Enviado" => "blue",
-                    "Entregue" => "green",
-                    "Cancelado" => "red",
-                    _ => "gray"
-                });
-    }
-}
+    MaxDepth = 5
+};
 ```
 
-## Melhores Práticas
+## Tratamento de Exceções
 
-### 1. Organização de Profiles
+Erros de mapeamento são encapsulados em `MirrorException`, preservando a exceção interna original.
 
 ```csharp
-// ✅ CORRETO: Um profile por módulo/contexto
-public class UsuarioProfile : MirrorProfile { }
-public class ProdutoProfile : MirrorProfile { }
-public class PedidoProfile : MirrorProfile { }
-
-// ❌ ERRADO: Tudo em um único profile gigante
-public class TodosMappingsProfile : MirrorProfile { }
-```
-
-### 2. Nomenclatura Consistente
-
-```csharp
-// ✅ CORRETO: Nomes claros e consistentes
-public class UsuarioCreateDto { }
-public class UsuarioUpdateDto { }
-public class UsuarioListaDto { }
-public class UsuarioDetalheDto { }
-
-// ❌ ERRADO: Nomes confusos
-public class UsuarioDTO1 { }
-public class Usuario2 { }
-```
-
-### 3. Tratamento de Erros
-
-```csharp
-public class UsuarioService
+try
 {
-    private readonly IMirror _mirror;
-    private readonly ILogger<UsuarioService> _logger;
-
-    public async Task<UsuarioDto> GetUsuario(int id)
-    {
-        try
-        {
-            var usuario = await _repository.GetByIdAsync(id);
-            return _mirror.Reflect<Usuario, UsuarioDto>(usuario);
-        }
-        catch (MirrorException ex)
-        {
-            _logger.LogError(ex, "Erro ao mapear usuário {Id}", id);
-            throw new ApplicationException("Erro ao processar usuário", ex);
-        }
-    }
+    var result = source.ReflectSafe<Destination>();
+}
+catch (MirrorException ex)
+{
+    Console.WriteLine(ex.Message);
+    Console.WriteLine(ex.InnerException?.Message);
 }
 ```
 
-### 4. Performance
+## Quando Usar
 
-```csharp
-// ✅ CORRETO: Reutilizar instância do Mirror
-public class MeuService
-{
-    private readonly IMirror _mirror;
-    
-    public MeuService(IMirror mirror)
-    {
-        _mirror = mirror; // Injetado como singleton/scoped
-    }
-}
+O Mirror é indicado para:
 
-// ❌ ERRADO: Criar nova instância a cada chamada
-public void Metodo()
-{
-    var mirror = new Mirror.Mirror(); // Evite!
-}
-```
+- aplicações que precisam de mapeamento claro e direto
+- APIs que convertem entidades em DTOs com frequência
+- projetos que preferem controle explícito sobre o pipeline de mapeamento
+- cenários em que listas, dicionários e grafos complexos fazem parte do fluxo
 
-### 5. Validação de Dados
+## Resumo
 
-```csharp
-public class UsuarioValidator
-{
-    private readonly IMirror _mirror;
+Mirror entrega uma base sólida para mapeamento objeto-objeto em .NET com foco em simplicidade, previsibilidade e extensibilidade. A biblioteca já suporta cenários básicos, profundos e híbridos com listas, dicionários, profiles, factories e regras de ignore, mantendo uma API pequena e fácil de adotar.
 
-    public async Task<Usuario> CreateUsuario(UsuarioCreateDto dto)
-    {
-        // Validar DTO antes do mapeamento
-        if (string.IsNullOrEmpty(dto.Email))
-            throw new ValidationException("Email é obrigatório");
+## Licença
 
-        var usuario = _mirror.Reflect<UsuarioCreateDto, Usuario>(dto);
-        
-        // Validar entidade após mapeamento
-        if (await _repository.EmailExists(usuario.Email))
-            throw new ValidationException("Email já existe");
+Este projeto está licenciado sob a licença MIT.
 
-        return usuario;
-    }
-}
-```
-
-### 6. Testes Unitários
-
-```csharp
-public class UsuarioProfileTests
-{
-    [Fact]
-    public void Deve_Mapear_Usuario_Para_Dto_Corretamente()
-    {
-        // Arrange
-        var config = new MirrorConfiguration();
-        var profile = new UsuarioProfile();
-        profile.Configure(new MirrorProfileExpression(config));
-        
-        var mirror = new Mirror.Mirror(config);
-        var usuario = new Usuario 
-        { 
-            PrimeiroNome = "João", 
-            UltimoNome = "Silva",
-            Ativo = true,
-            DataNascimento = new DateTime(1990, 1, 1)
-        };
-
-        // Act
-        var dto = mirror.Reflect<Usuario, UsuarioDto>(usuario);
-
-        // Assert
-        Assert.Equal("João Silva", dto.NomeCompleto);
-        Assert.Equal("Ativo", dto.Status);
-        Assert.Equal(DateTime.Today.Year - 1990, dto.Idade);
-    }
-
-    [Fact]
-    public void Deve_Ignorar_Propriedades_Sem_Correspondencia()
-    {
-        var mirror = new Mirror.Mirror();
-        var origem = new { Id = 1, Nome = "Teste" };
-        
-        var destino = new Destino { Id = 0, Descricao = "Original" };
-        mirror.Reflect(origem, destino);
-        
-        Assert.Equal(1, destino.Id); // Mapeado
-        Assert.Equal("Original", destino.Descricao); // Mantido
-    }
-
-    public class Destino
-    {
-        public int Id { get; set; }
-        public string Descricao { get; set; }
-    }
-}
-```
-
-### 7. Configuração por Atributos (Opcional)
-
-```csharp
-[AttributeUsage(AttributeTargets.Property)]
-public class MirrorIgnoreAttribute : Attribute { }
-
-[AttributeUsage(AttributeTargets.Property)]
-public class MirrorMapAttribute : Attribute
-{
-    public string TargetProperty { get; }
-    public MirrorMapAttribute(string targetProperty) => TargetProperty = targetProperty;
-}
-
-// Uso
-public class Usuario
-{
-    public int Id { get; set; }
-    
-    [MirrorMap("NomeCompleto")]
-    public string Nome { get; set; }
-    
-    [MirrorIgnore]
-    public string Senha { get; set; }
-}
-```
-
-## API Reference
-
-### IMirror
-
-| Método | Descrição |
-|--------|-----------|
-| `TDestino Reflect<TOrigem, TDestino>(TOrigem origem)` | Cria novo objeto destino mapeado da origem |
-| `void Reflect<TOrigem, TDestino>(TOrigem origem, TDestino destino)` | Mapeia origem para objeto destino existente |
-
-### MirrorConfiguration
-
-| Método | Descrição |
-|--------|-----------|
-| `CreateReflection<TOrigem, TDestino>()` | Inicia configuração de mapeamento |
-| `SetMaxDepth(int depth)` | Define profundidade máxima para objetos aninhados |
-| `IgnoreNullValues(bool ignore)` | Configura se valores nulos são ignorados |
-| `EnableValidation(bool enable)` | Habilita validação de tipos |
-
-### IReflectionExpression
-
-| Método | Descrição |
-|--------|-----------|
-| `ForMember<TProp>(destinoMember, transform)` | Configura transformação para propriedade específica |
-
-### Métodos de Extensão
-
-| Método | Descrição |
-|--------|-----------|
-| `ReflectAll<TOrigem, TDestino>(this IMirror, IEnumerable<TOrigem>)` | Mapeia coleção de objetos |
-| `ReflectTo<TDestino>(this object, IMirror)` | Extensão direta no objeto |
-
-## Contribuição
-
-### Como Contribuir
-
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-### Diretrizes de Código
-
-- Mantenha o código limpo e documentado
-- Siga os princípios SOLID
-- Escreva testes para novas funcionalidades
-- Atualize a documentação quando necessário
-
-### Reportando Issues
-
-Use o GitHub Issues para reportar:
-- Bugs
-- Sugestões de melhoria
-- Dúvidas
-
-## Conclusão
-
-Mirror é uma biblioteca poderosa mas simples para mapeamento de objetos em .NET. Com sua API intuitiva e flexível, ela oferece uma alternativa leve ao AutoMapper, mantendo as funcionalidades essenciais para a maioria dos casos de uso em aplicações .NET.
-
-### Vantagens do Mirror
-
-- ✅ **Curva de aprendizado suave**
-- ✅ **Código limpo e manutenível**
-- ✅ **Performance otimizada**
-- ✅ **Integração nativa com DI**
-- ✅ **Sem dependências externas**
-- ✅ **Totalmente testado**
-
-### Quando Usar
-
-- Aplicações que precisam de mapeamento simples e direto
-- Projetos que valorizam simplicidade sobre complexidade
-- Times que preferem controle explícito sobre mapeamentos
-- Microserviços e aplicações leves
-
-### Quando Considerar Alternativas
-
-- Necessidade de mapeamentos extremamente complexos
-- Requisitos avançados de projeção de queries
-- Integração com ORMs específicos
-
----
-
-**Mirror** - Refletindo seus objetos com simplicidade e elegância! 🪞
+Você pode usar, copiar, modificar e distribuir a biblioteca gratuitamente, inclusive em projetos comerciais, desde que o aviso de copyright e a licença sejam preservados.

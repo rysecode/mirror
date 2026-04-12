@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Extensions Reflect</title>
+</head>
+<body>
+    <header>
+        <h1>Usar Extensions para Criar Novo Destino</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p>As extensões oferecem uma sintaxe mais fluida e conveniente para o consumo da biblioteca. Com um mirror padrão configurado, é possível mapear diretamente a partir do objeto de origem.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>using Mirror.Extensions;
+
+var dto = user.Reflect&lt;UserDto&gt;();
+</code></pre>
+        </section>
+        <section>
+            <h2>Quando Esse Formato é Útil</h2>
+            <ul>
+                <li>quando a equipe prefere sintaxe fluida</li>
+                <li>quando existe um mirror padrão global definido</li>
+                <li>quando o código de aplicação precisa ficar mais enxuto</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

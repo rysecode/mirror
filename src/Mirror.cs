@@ -1,5 +1,6 @@
 using Mirror.Exceptions;
 using System.Collections;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Mirror;
@@ -17,6 +18,11 @@ public class Mirror : IMirror
 
 	public TDestino Reflect<TOrigem, TDestino>(TOrigem origem) where TDestino : new()
 	{
+		return Reflect<TOrigem, TDestino>(origem, Array.Empty<Expression<Func<TDestino, object?>>>());
+	}
+
+	public TDestino Reflect<TOrigem, TDestino>(TOrigem origem, params Expression<Func<TDestino, object?>>[] ignoreMembers) where TDestino : new()
+	{
 		ArgumentNullException.ThrowIfNull(origem);
 
 		var key = (typeof(TOrigem), typeof(TDestino));
@@ -25,17 +31,22 @@ public class Mirror : IMirror
 
 		var destino = new TDestino();
 		var context = MappingContext.Create(_configuration.MaxDepth);
-		MapearPropriedades(origem, destino, context);
+		MapearPropriedades(origem, destino, context, CreateIgnoreSet(ignoreMembers));
 		return destino;
 	}
 
 	public void Reflect<TOrigem, TDestino>(TOrigem origem, TDestino destino)
 	{
+		Reflect(origem, destino, Array.Empty<Expression<Func<TDestino, object?>>>());
+	}
+
+	public void Reflect<TOrigem, TDestino>(TOrigem origem, TDestino destino, params Expression<Func<TDestino, object?>>[] ignoreMembers)
+	{
 		ArgumentNullException.ThrowIfNull(origem);
 		ArgumentNullException.ThrowIfNull(destino);
 
 		var context = MappingContext.Create(_configuration.MaxDepth);
-		MapearPropriedades(origem, destino, context);
+		MapearPropriedades(origem, destino, context, CreateIgnoreSet(ignoreMembers));
 	}
 
 	public TDestino ReflectUsingFactory<TOrigem, TDestino>(TOrigem origem)
@@ -56,11 +67,11 @@ public class Mirror : IMirror
 
 		var destino = factory(origem);
 		var context = MappingContext.Create(_configuration.MaxDepth);
-		MapearPropriedades(origem, destino, context);
+		MapearPropriedades(origem, destino, context, []);
 		return destino;
 	}
 
-	private void MapearPropriedades<TOrigem, TDestino>(TOrigem origem, TDestino destino, MappingContext context)
+	private void MapearPropriedades<TOrigem, TDestino>(TOrigem origem, TDestino destino, MappingContext context, HashSet<string> ignoredMembers)
 	{
 		var propriedadesOrigem = typeof(TOrigem).GetProperties(BindingFlags.Public | BindingFlags.Instance)
 			.Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
@@ -73,6 +84,9 @@ public class Mirror : IMirror
 		{
 			try
 			{
+				if (ShouldIgnoreProperty(propDestino, ignoredMembers))
+					continue;
+
 				Func<object, object?>? transform = null;
 				var possuiTransformacao = _configuration.Transformations.TryGetValue(reflectionKey, out var transformations) &&
 					transformations.TryGetValue(propDestino.Name, out transform);
@@ -118,8 +132,8 @@ public class Mirror : IMirror
 					var destinoAtual = propDestino.GetValue(destino);
 					var possuiFactory = _configuration.Factories.ContainsKey((valorOrigem.GetType(), propDestino.PropertyType));
 					var objetoMapeado = !possuiFactory && destinoAtual != null && propDestino.PropertyType.IsInstanceOfType(destinoAtual)
-						? MapearObjetoEmInstanciaExistente(valorOrigem, destinoAtual, propDestino.PropertyType, context.CreateChild())
-						: MapearObjeto(valorOrigem, propDestino.PropertyType, context.CreateChild());
+						? MapearObjetoEmInstanciaExistente(valorOrigem, destinoAtual, propDestino.PropertyType, context.CreateChild(), ignoredMembers)
+						: MapearObjeto(valorOrigem, propDestino.PropertyType, context.CreateChild(), ignoredMembers);
 					if (objetoMapeado != null || !_configuration.IgnoreNullValues)
 						propDestino.SetValue(destino, objetoMapeado);
 				}
@@ -137,6 +151,11 @@ public class Mirror : IMirror
 
 	private object? MapearObjeto(object origem, Type tipoDestino, MappingContext context)
 	{
+		return MapearObjeto(origem, tipoDestino, context, []);
+	}
+
+	private object? MapearObjeto(object origem, Type tipoDestino, MappingContext context, HashSet<string> ignoredMembers)
+	{
 		if (context.MaxDepthReached || !context.TryEnter(origem))
 			return null;
 
@@ -152,7 +171,7 @@ public class Mirror : IMirror
 
 			var metodoMapear = GetType().GetMethod(nameof(MapearPropriedades), BindingFlags.NonPublic | BindingFlags.Instance);
 			var metodoGenerico = metodoMapear?.MakeGenericMethod(origem.GetType(), tipoDestino);
-			metodoGenerico?.Invoke(this, new object[] { origem, destino, context.CreateChild() });
+			metodoGenerico?.Invoke(this, new object[] { origem, destino, context.CreateChild(), ignoredMembers });
 
 			return destino;
 		}
@@ -166,7 +185,7 @@ public class Mirror : IMirror
 		}
 	}
 
-	private object? MapearObjetoEmInstanciaExistente(object origem, object destino, Type tipoDestino, MappingContext context)
+	private object? MapearObjetoEmInstanciaExistente(object origem, object destino, Type tipoDestino, MappingContext context, HashSet<string> ignoredMembers)
 	{
 		if (context.MaxDepthReached || !context.TryEnter(origem))
 			return destino;
@@ -175,7 +194,7 @@ public class Mirror : IMirror
 		{
 			var metodoMapear = GetType().GetMethod(nameof(MapearPropriedades), BindingFlags.NonPublic | BindingFlags.Instance);
 			var metodoGenerico = metodoMapear?.MakeGenericMethod(origem.GetType(), tipoDestino);
-			metodoGenerico?.Invoke(this, new[] { origem, destino, context.CreateChild() });
+			metodoGenerico?.Invoke(this, new object[] { origem, destino, context.CreateChild(), ignoredMembers });
 
 			return destino;
 		}
@@ -238,7 +257,7 @@ public class Mirror : IMirror
 				continue;
 			}
 
-			var itemMapeado = MapearObjeto(item, tipoItem, context.CreateChild());
+			var itemMapeado = MapearObjeto(item, tipoItem, context.CreateChild(), []);
 			if (itemMapeado != null)
 				itensMapeados.Add(itemMapeado);
 		}
@@ -513,7 +532,40 @@ public class Mirror : IMirror
 			}
 		}
 
-		return MapearObjeto(valorOrigem, tipoDestino, context);
+		return MapearObjeto(valorOrigem, tipoDestino, context, []);
+	}
+
+	private static HashSet<string> CreateIgnoreSet<TDestino>(IEnumerable<Expression<Func<TDestino, object?>>>? ignoreMembers)
+	{
+		var ignoredMembers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		if (ignoreMembers == null)
+			return ignoredMembers;
+
+		foreach (var ignoreMember in ignoreMembers)
+		{
+			var propertyName = GetPropertyName(ignoreMember);
+			if (!string.IsNullOrWhiteSpace(propertyName))
+				ignoredMembers.Add(propertyName);
+		}
+
+		return ignoredMembers;
+	}
+
+	private static string? GetPropertyName<TDestino>(Expression<Func<TDestino, object?>> expression)
+	{
+		return expression.Body switch
+		{
+			MemberExpression member => member.Member.Name,
+			UnaryExpression { Operand: MemberExpression member } => member.Member.Name,
+			_ => throw new ArgumentException("A expressão deve apontar para uma propriedade.", nameof(expression))
+		};
+	}
+
+	private static bool ShouldIgnoreProperty(PropertyInfo propertyInfo, HashSet<string> ignoredMembers)
+	{
+		return ignoredMembers.Contains(propertyInfo.Name) ||
+			propertyInfo.IsDefined(typeof(MirrorNonReflectAttribute), inherit: true);
 	}
 
 	private static IEnumerable<(object? Key, object? Value)> EnumerarEntradasDeDicionario(object origem)

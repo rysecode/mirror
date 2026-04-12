@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Extensions ReflectAll</title>
+</head>
+<body>
+    <header>
+        <h1>Mapear Coleções com Extensions</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p><code>ReflectAll</code> facilita o mapeamento de sequências inteiras sem exigir loop manual explícito no código de aplicação.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>var users = new List&lt;User&gt;
+{
+    new() { Id = 1, Name = "Ana" },
+    new() { Id = 2, Name = "Bruno" }
+};
+
+var dtos = users.ReflectAll&lt;User, UserDto&gt;().ToList();
+</code></pre>
+        </section>
+        <section>
+            <h2>Benefícios</h2>
+            <ul>
+                <li>reduz código repetitivo em loops de projeção</li>
+                <li>mantém o mesmo pipeline de mapeamento por item</li>
+                <li>funciona bem com coleções simples ou profundas</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

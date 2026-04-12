@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Configuração e Regras</title>
+</head>
+<body>
+    <header>
+        <h1>Configuração e Regras</h1>
+        <p><a href="index.html">Voltar para Implementação</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>MirrorConfiguration</h2>
+            <p><code>MirrorConfiguration</code> concentra o comportamento customizável da biblioteca. É nesse objeto que são registradas transformações, factories, limites e preferências globais de mapeamento.</p>
+<pre><code>var configuration = new MirrorConfiguration
+{
+    IgnoreNullValues = true,
+    MaxDepth = 10
+};
+
+var mirror = new Mirror.Mirror(configuration);
+</code></pre>
+        </section>
+        <section>
+            <h2>Transformações por Membro</h2>
+<pre><code>configuration.CreateReflection&lt;User, UserDto&gt;()
+    .ForMember(dto =&gt; dto.Name, user =&gt; user.Name.ToUpperInvariant());
+</code></pre>
+            <p>Transformações são úteis quando o destino precisa de um valor calculado a partir do objeto de origem.</p>
+        </section>
+        <section>
+            <h2>Factories</h2>
+<pre><code>configuration.AddFactory&lt;CreateCompanyRequest, Company&gt;(request =&gt;
+    Company.Create(request.Name, request.Document)
+);
+</code></pre>
+            <p>Factories ajudam a preservar invariantes de domínio e controlar a criação do destino.</p>
+        </section>
+        <section>
+            <h2>IgnoreNullValues e MaxDepth</h2>
+            <p>Quando <code>IgnoreNullValues</code> está habilitado, valores nulos da origem não sobrescrevem o destino. Já <code>MaxDepth</code> limita a profundidade de navegação para proteger o mapeamento em grafos extensos ou cíclicos.</p>
+        </section>
+    </main>
+</body>
+</html>

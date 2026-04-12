@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Factories</title>
+</head>
+<body>
+    <header>
+        <h1>Usar Factories</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Quando Usar</h2>
+            <p>Factories devem ser usadas quando a construção do destino precisa passar por uma regra própria, método estático, validação interna ou qualquer outra forma de criação que não seja simplesmente uma instanciação padrão.</p>
+        </section>
+        <section>
+            <h2>Factory Registrada em Configuração</h2>
+<pre><code>var configuration = new MirrorConfiguration();
+
+configuration.AddFactory&lt;CreateCompanyRequest, Company&gt;(request =&gt;
+    Company.Create(request.Name, request.Document)
+);
+
+var mirror = new Mirror.Mirror(configuration);
+var company = mirror.Reflect&lt;CreateCompanyRequest, Company&gt;(request);
+</code></pre>
+        </section>
+        <section>
+            <h2>Factory Informada Diretamente na Chamada</h2>
+<pre><code>var result = mirror.ReflectWithFactory(request, source =&gt;
+    Company.Create(source.Name, source.Document)
+);
+</code></pre>
+        </section>
+        <section>
+            <h2>Boas Práticas</h2>
+            <ul>
+                <li>use factory quando o destino possui invariantes</li>
+                <li>prefira configuração global se a regra for recorrente</li>
+                <li>prefira factory inline quando a regra for local ao fluxo</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

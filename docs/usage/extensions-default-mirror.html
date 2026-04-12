@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Default Mirror</title>
+</head>
+<body>
+    <header>
+        <h1>Configurar um Mirror Padrão para as Extensions</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p>As extensions sem parâmetro explícito de <code>IMirror</code> dependem de um mirror padrão configurado. Isso permite chamadas como <code>source.Reflect&lt;Destination&gt;()</code> sem precisar injetar o mapper em toda parte.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>var configuration = new MirrorConfiguration();
+
+configuration.CreateReflection&lt;User, UserDto&gt;()
+    .ForMember(dto =&gt; dto.Name, user =&gt; user.Name.ToUpperInvariant());
+
+MirrorExtensions.SetDefaultMirror(new Mirror.Mirror(configuration));
+
+var dto = user.Reflect&lt;UserDto&gt;();
+
+MirrorExtensions.ResetDefaultMirror();
+</code></pre>
+        </section>
+        <section>
+            <h2>Cuidados</h2>
+            <ul>
+                <li>como o mirror padrão é global, use essa estratégia com disciplina</li>
+                <li>em aplicações maiores, prefira definir claramente onde a API fluida é permitida</li>
+                <li>em cenários altamente concorrentes, avalie se a configuração global atende bem ao modelo da aplicação</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

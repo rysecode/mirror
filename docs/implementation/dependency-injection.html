@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Injeção de Dependência</title>
+</head>
+<body>
+    <header>
+        <h1>Integração com Injeção de Dependência</h1>
+        <p><a href="index.html">Voltar para Implementação</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Registro Básico</h2>
+<pre><code>builder.Services.AddMirror(config =&gt;
+{
+    config.IgnoreNullValues = true;
+    config.MaxDepth = 10;
+});
+</code></pre>
+        </section>
+        <section>
+            <h2>Registro com Profiles</h2>
+<pre><code>builder.Services.AddMirrorWithProfiles(
+    configure: config =&gt;
+    {
+        config.IgnoreNullValues = true;
+        config.MaxDepth = 10;
+    },
+    Assembly.GetExecutingAssembly()
+);
+</code></pre>
+        </section>
+        <section>
+            <h2>Consumo em Serviços</h2>
+<pre><code>public class UserService
+{
+    private readonly IMirror _mirror;
+
+    public UserService(IMirror mirror)
+    {
+        _mirror = mirror;
+    }
+
+    public UserDto Map(User user)
+    {
+        return _mirror.Reflect&lt;User, UserDto&gt;(user);
+    }
+}
+</code></pre>
+        </section>
+    </main>
+</body>
+</html>

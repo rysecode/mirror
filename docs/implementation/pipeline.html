@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Pipeline Interno</title>
+</head>
+<body>
+    <header>
+        <h1>Pipeline Interno de Mapeamento</h1>
+        <p><a href="index.html">Voltar para Implementação</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Como o Mirror Decide o que Fazer</h2>
+            <p>O Mirror parte do tipo de origem, do tipo de destino e da configuração ativa para decidir qual estratégia de mapeamento aplicar. O foco é preservar consistência: um valor simples é tratado como valor simples, uma coleção passa por materialização específica e um objeto complexo pode ser mapeado recursivamente ou atualizado em uma instância já existente.</p>
+        </section>
+        <section>
+            <h2>Etapas do Pipeline</h2>
+            <ol>
+                <li>o Mirror identifica se existe uma factory registrada para o par origem-destino</li>
+                <li>se não houver factory prioritária, ele avalia se o destino é valor simples, objeto complexo, coleção ou mapa</li>
+                <li>para propriedades de destino, ele verifica se alguma deve ser ignorada por atributo ou por expressão</li>
+                <li>se existir transformação configurada com <code>ForMember</code>, a transformação é aplicada antes da atribuição</li>
+                <li>quando o valor exige navegação profunda, o Mirror continua o processo recursivamente</li>
+                <li>durante a recursão, ele monitora profundidade máxima e ciclos de referência</li>
+            </ol>
+        </section>
+        <section>
+            <h2>Mapeamento Baseado no Destino</h2>
+            <p>Um ponto importante da implementação atual é que o fluxo principal percorre as propriedades do destino. Essa decisão torna o comportamento mais previsível em cenários de transformação, ignores e atualização de instância, porque a biblioteca passa a decidir o que fazer a partir do contrato que precisa ser preenchido.</p>
+        </section>
+        <section>
+            <h2>Recursão e Grafos Complexos</h2>
+            <p>Quando o valor da propriedade não é simples e não pode ser copiado diretamente, o Mirror tenta mapear o objeto aninhado. Esse comportamento vale para objetos complexos, itens de coleções e valores em dicionários. O mesmo pipeline é reaproveitado em todos esses contextos, o que reduz inconsistências entre cenários aparentemente diferentes.</p>
+        </section>
+    </main>
+</body>
+</html>

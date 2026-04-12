@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Extensions ReflectTo</title>
+</head>
+<body>
+    <header>
+        <h1>Usar Extensions para Atualizar Destino</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Exemplo Básico</h2>
+<pre><code>using Mirror.Extensions;
+
+user.ReflectTo(existingDto);
+</code></pre>
+        </section>
+        <section>
+            <h2>Exemplo com Ignore por Expressão</h2>
+<pre><code>user.ReflectTo(existingDto, x =&gt; x.Name);
+</code></pre>
+        </section>
+        <section>
+            <h2>Observação</h2>
+            <p>Esse formato é especialmente útil quando o destino já existe e a aplicação deseja manter a fluidez da sintaxe de extensão.</p>
+        </section>
+    </main>
+</body>
+</html>

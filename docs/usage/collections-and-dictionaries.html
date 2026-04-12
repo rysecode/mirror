@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Coleções e Dicionários</title>
+</head>
+<body>
+    <header>
+        <h1>Mapear Coleções e Dicionários</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Listas Simples</h2>
+<pre><code>var people = new List&lt;Person&gt;();
+var dtos = mirror.Reflect&lt;List&lt;Person&gt;, List&lt;PersonDto&gt;&gt;(people);
+</code></pre>
+        </section>
+        <section>
+            <h2>Listas com Itens Complexos</h2>
+            <p>Quando cada item da coleção contém objetos e listas internas, o Mirror percorre cada camada usando o mesmo pipeline recursivo.</p>
+        </section>
+        <section>
+            <h2>Dicionários</h2>
+<pre><code>var source = new Dictionary&lt;string, Person&gt;();
+var result = mirror.Reflect&lt;Dictionary&lt;string, Person&gt;, Dictionary&lt;string, PersonDto&gt;&gt;(source);
+</code></pre>
+        </section>
+        <section>
+            <h2>Cenários Profundos</h2>
+            <p>O suporte atual cobre cenários em que uma lista contém itens complexos, que por sua vez contêm listas simples, listas complexas, dicionários e objetos opcionais. Esse é um ponto importante da robustez atual do Mirror.</p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Criar Novo Objeto</title>
+</head>
+<body>
+    <header>
+        <h1>Criar um Novo Objeto de Destino</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Quando Usar</h2>
+            <p>Esse é o cenário mais comum do Mirror: a origem já existe e você precisa gerar um novo objeto de destino preenchido com base nela.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>var mirror = new Mirror.Mirror();
+
+var user = new User
+{
+    Id = 1,
+    Name = "Ana",
+    Email = "ana@company.com"
+};
+
+var dto = mirror.Reflect&lt;User, UserDto&gt;(user);
+</code></pre>
+        </section>
+        <section>
+            <h2>O que Acontece no Pipeline</h2>
+            <ul>
+                <li>o destino é criado pelo Mirror</li>
+                <li>as propriedades compatíveis são localizadas por nome</li>
+                <li>valores simples são copiados</li>
+                <li>objetos complexos e coleções entram no pipeline recursivo</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

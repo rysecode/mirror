@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Instalação</title>
+</head>
+<body>
+    <header>
+        <h1>Instalação</h1>
+        <p><a href="index.html">Voltar para a página inicial</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Pré-requisitos</h2>
+            <ul>
+                <li>SDK .NET compatível com a versão alvo do pacote</li>
+                <li>um projeto de aplicação, biblioteca ou teste que fará o consumo do Mirror</li>
+                <li>referência ao namespace da biblioteca nos arquivos onde o mapeamento será utilizado</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Instalação via .NET CLI</h2>
+            <p>Essa é a forma mais simples para adicionar o pacote diretamente pelo terminal.</p>
+<pre><code>dotnet add package Mirror
+</code></pre>
+            <p>Depois da instalação, o pacote passa a ser resolvido automaticamente pelo projeto, permitindo o uso de <code>IMirror</code>, <code>MirrorConfiguration</code>, extensions e integração com DI.</p>
+        </section>
+        <section>
+            <h2>Instalação via PackageReference</h2>
+            <p>Em cenários controlados por edição direta do arquivo de projeto, você pode adicionar a referência manualmente no <code>.csproj</code>.</p>
+<pre><code>&lt;ItemGroup&gt;
+  &lt;PackageReference Include="Mirror" Version="1.1.0" /&gt;
+&lt;/ItemGroup&gt;
+</code></pre>
+            <p>Esse formato é útil quando a equipe centraliza gerenciamento de dependências via repositório ou arquivos de build.</p>
+        </section>
+        <section>
+            <h2>Namespaces Comuns</h2>
+<pre><code>using Mirror;
+using Mirror.Extensions;
+using Mirror.DependencyInjection;
+</code></pre>
+            <p>Em geral, <code>Mirror</code> é usado para a API principal, <code>Mirror.Extensions</code> para métodos fluentes e <code>Mirror.DependencyInjection</code> para registro no container.</p>
+        </section>
+        <section>
+            <h2>Verificando a Instalação</h2>
+<pre><code>using Mirror;
+
+var mirror = new Mirror.Mirror();
+
+var source = new User
+{
+    Id = 1,
+    Name = "Ana"
+};
+
+var dto = mirror.Reflect&lt;User, UserDto&gt;(source);
+</code></pre>
+            <p>Se o projeto compilar e o objeto de destino for criado corretamente, a biblioteca está pronta para uso.</p>
+        </section>
+    </main>
+</body>
+</html>

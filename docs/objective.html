@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Objetivo</title>
+</head>
+<body>
+    <header>
+        <h1>Objetivo</h1>
+        <p><a href="index.html">Voltar para a página inicial</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Propósito da Biblioteca</h2>
+            <p>O Mirror existe para simplificar o mapeamento entre objetos em aplicações .NET. Em sistemas reais, é comum precisarmos converter entidades de domínio em DTOs, requests em aggregates, responses em view models e estruturas internas em modelos expostos para outras camadas. Sem uma biblioteca de apoio, esse processo costuma gerar muito código repetitivo, sujeito a erro e difícil de manter.</p>
+            <p>Em vez de exigir que cada time escreva manualmente dezenas ou centenas de trechos de cópia de propriedades, o Mirror concentra essa responsabilidade em uma API única, clara e previsível.</p>
+        </section>
+        <section>
+            <h2>Problemas que o Mirror Resolve</h2>
+            <ul>
+                <li>reduz repetição de código ao copiar propriedades entre tipos semelhantes</li>
+                <li>padroniza o comportamento de mapeamento em toda a aplicação</li>
+                <li>simplifica atualização de objetos já existentes sem recriar toda a estrutura manualmente</li>
+                <li>permite tratar coleções, dicionários e objetos aninhados com o mesmo pipeline</li>
+                <li>oferece pontos explícitos de customização para cenários que exigem regra de negócio ou construção especial</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Filosofia de Design</h2>
+            <p>O Mirror foi desenhado para ser simples de entender. A biblioteca privilegia leitura de código, comportamento explícito e baixo atrito de adoção. Em vez de depender exclusivamente de configurações globais complexas, ela favorece uma abordagem em que o desenvolvedor consegue prever com clareza o que será copiado, quando valores serão preservados e onde regras especiais entram em ação.</p>
+            <p>Essa filosofia torna o Mirror especialmente útil para equipes que valorizam clareza arquitetural, diagnósticos mais simples em produção e menor custo de manutenção ao longo do tempo.</p>
+        </section>
+        <section>
+            <h2>Quando Usar</h2>
+            <ul>
+                <li>APIs que convertem entidades em DTOs e vice-versa</li>
+                <li>camadas de aplicação que recebem requests e constroem objetos de domínio</li>
+                <li>sistemas que precisam atualizar objetos existentes sem sobrescrever todos os valores</li>
+                <li>cenários com grafos aninhados, listas, mapas chave-valor e regras de ignore</li>
+                <li>projetos que desejam uma alternativa mais direta e controlável para mapeamento objeto-objeto</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Quando Não é a Melhor Ferramenta</h2>
+            <p>Se o mapeamento de um tipo para outro depende fortemente de regras de negócio complexas, múltiplos serviços externos, validações extensas ou efeitos colaterais importantes, pode ser mais apropriado encapsular a criação manualmente em uma fábrica de aplicação ou serviço específico. O Mirror ajuda muito na movimentação de dados, mas não deve substituir modelagem de domínio ou orquestração de regras complexas.</p>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Exceções e Limites</title>
+</head>
+<body>
+    <header>
+        <h1>Tratamento de Exceções e Limites</h1>
+        <p><a href="index.html">Voltar para Implementação</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>MirrorException</h2>
+<pre><code>try
+{
+    var dto = source.ReflectSafe&lt;Destination&gt;();
+}
+catch (MirrorException ex)
+{
+    Console.WriteLine(ex.Message);
+    Console.WriteLine(ex.InnerException?.Message);
+}
+</code></pre>
+            <p>Falhas de mapeamento são encapsuladas em <code>MirrorException</code>, preservando a exceção original.</p>
+        </section>
+        <section>
+            <h2>Proteção contra Recursão Excessiva</h2>
+            <p>Grafos complexos podem conter profundidade elevada ou ciclos. Por isso, a implementação respeita <code>MaxDepth</code> e mantém controle do contexto durante a recursão.</p>
+        </section>
+        <section>
+            <h2>Cuidados Práticos</h2>
+            <ul>
+                <li>configure <code>MaxDepth</code> de forma intencional</li>
+                <li>use <code>IgnoreNullValues</code> em updates parciais</li>
+                <li>para construções de domínio complexas, prefira factories</li>
+                <li>escreva testes específicos para cenários ambíguos do projeto</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Ignore por Expressão</title>
+</head>
+<body>
+    <header>
+        <h1>Ignorar Propriedades por Expressão</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p>Ignorar por expressão é útil quando a regra de preservação depende da chamada atual e não deve ficar fixa no tipo de destino. A lista de membros ignorados é passada diretamente na invocação do <code>Reflect</code>.</p>
+        </section>
+        <section>
+            <h2>Exemplo Atualizando Objeto Existente</h2>
+<pre><code>mirror.Reflect(source, destination, x =&gt; x.Name);
+mirror.Reflect(source, destination, x =&gt; x.Name, x =&gt; x.Windows);
+</code></pre>
+        </section>
+        <section>
+            <h2>Exemplo Criando Novo Objeto</h2>
+<pre><code>var dto = mirror.Reflect&lt;House, HouseDto&gt;(source, x =&gt; x.Name);
+</code></pre>
+        </section>
+        <section>
+            <h2>Quando Preferir esse Formato</h2>
+            <ul>
+                <li>quando a regra é contextual</li>
+                <li>quando o mesmo tipo de destino pode ser usado em fluxos diferentes</li>
+                <li>quando o projeto não quer acoplar a regra ao modelo com atributo</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

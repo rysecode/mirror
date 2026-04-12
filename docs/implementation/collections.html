@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Coleções e Dicionários</title>
+</head>
+<body>
+    <header>
+        <h1>Coleções e Dicionários</h1>
+        <p><a href="index.html">Voltar para Implementação</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Suporte a Coleções</h2>
+            <p>O Mirror consegue materializar diferentes famílias de coleções. Em vez de tratar apenas <code>List&lt;T&gt;</code>, a biblioteca identifica interfaces e tipos concretos compatíveis, criando a estrutura adequada para o destino sempre que possível.</p>
+            <ul>
+                <li><code>List&lt;T&gt;</code></li>
+                <li><code>ICollection&lt;T&gt;</code></li>
+                <li><code>IList&lt;T&gt;</code></li>
+                <li><code>IReadOnlyList&lt;T&gt;</code></li>
+                <li><code>IReadOnlyCollection&lt;T&gt;</code></li>
+                <li><code>Collection&lt;T&gt;</code></li>
+                <li><code>ObservableCollection&lt;T&gt;</code></li>
+                <li><code>ReadOnlyCollection&lt;T&gt;</code></li>
+                <li><code>LinkedList&lt;T&gt;</code></li>
+                <li><code>Queue&lt;T&gt;</code></li>
+                <li><code>Stack&lt;T&gt;</code></li>
+                <li><code>ImmutableList&lt;T&gt;</code></li>
+                <li><code>ConcurrentBag&lt;T&gt;</code></li>
+                <li>arrays</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Suporte a Mapas Chave-Valor</h2>
+            <p>Para estruturas de mapa, o Mirror percorre pares <code>Key</code>/<code>Value</code>, preserva a chave e aplica o pipeline de mapeamento sobre o valor.</p>
+            <ul>
+                <li><code>Dictionary&lt;TKey, TValue&gt;</code></li>
+                <li><code>SortedList&lt;TKey, TValue&gt;</code></li>
+                <li><code>IReadOnlyDictionary&lt;TKey, TValue&gt;</code></li>
+                <li><code>ReadOnlyDictionary&lt;TKey, TValue&gt;</code></li>
+                <li><code>ConcurrentDictionary&lt;TKey, TValue&gt;</code></li>
+                <li><code>ImmutableDictionary&lt;TKey, TValue&gt;</code></li>
+                <li><code>Hashtable</code></li>
+                <li><code>IDictionary</code></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Profundidade em Itens Aninhados</h2>
+            <p>O mesmo pipeline é reaplicado dentro de coleções e dicionários. Isso permite listas com objetos complexos, mapas com listas como valor e grafos híbridos aninhados em múltiplos níveis.</p>
+        </section>
+    </main>
+</body>
+</html>

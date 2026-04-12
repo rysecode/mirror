@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Ignore por Atributo</title>
+</head>
+<body>
+    <header>
+        <h1>Ignorar Propriedades por Atributo</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Objetivo</h2>
+            <p>O atributo <code>MirrorNonReflect</code> permite marcar uma propriedade do destino que nunca deve ser alterada pelo pipeline de mapeamento. Esse formato é ideal quando a regra de preservação é estrutural e deve valer sempre para aquele membro.</p>
+        </section>
+        <section>
+            <h2>Exemplo</h2>
+<pre><code>public class HouseDto
+{
+    [MirrorNonReflect]
+    public string Name { get; set; } = string.Empty;
+
+    public int Doors { get; set; }
+    public int Windows { get; set; }
+}
+</code></pre>
+        </section>
+        <section>
+            <h2>Comportamento</h2>
+            <p>Se o destino já possuir um valor em <code>Name</code>, esse valor será preservado mesmo que a origem tenha outro valor disponível para a mesma propriedade.</p>
+        </section>
+    </main>
+</body>
+</html>

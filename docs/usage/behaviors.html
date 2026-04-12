@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Comportamentos Importantes</title>
+</head>
+<body>
+    <header>
+        <h1>Configurar Comportamentos Importantes</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>IgnoreNullValues</h2>
+            <p>Quando habilitado, valores nulos vindos da origem não sobrescrevem o que já existe no destino.</p>
+<pre><code>var config = new MirrorConfiguration
+{
+    IgnoreNullValues = true
+};
+</code></pre>
+        </section>
+        <section>
+            <h2>MaxDepth</h2>
+            <p>Define a profundidade máxima de mapeamento em grafos complexos.</p>
+<pre><code>var config = new MirrorConfiguration
+{
+    MaxDepth = 5
+};
+</code></pre>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Mirror Docs - Operações Seguras</title>
+</head>
+<body>
+    <header>
+        <h1>Operações Seguras e Tratamento de Erros</h1>
+        <p><a href="index.html">Voltar para Formas de Utilização</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Uso de ReflectSafe</h2>
+<pre><code>try
+{
+    var result = source.ReflectSafe&lt;Destination&gt;();
+}
+catch (MirrorException ex)
+{
+    Console.WriteLine(ex.Message);
+}
+</code></pre>
+            <p>Os métodos seguros ajudam a encapsular falhas de mapeamento dentro de <code>MirrorException</code>, tornando o tratamento mais previsível na aplicação.</p>
+        </section>
+        <section>
+            <h2>Quando Escrever Testes Específicos</h2>
+            <ul>
+                <li>quando há factories com lógica de domínio</li>
+                <li>quando coleções e dicionários se misturam em grafos profundos</li>
+                <li>quando existem regras contextuais de ignore</li>
+                <li>quando o projeto depende de preservação exata de estado em objetos existentes</li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>

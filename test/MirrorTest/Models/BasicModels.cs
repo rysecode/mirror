@@ -16,3 +16,25 @@ public class PessoaDto
 	public string Email { get; set; } = string.Empty;
 	public int Idade { get; set; }
 }
+
+public class Casa
+{
+	public string Nome { get; set; } = string.Empty;
+	public int Portas { get; set; }
+	public int Janelas { get; set; }
+}
+
+public class CasaDto
+{
+	[MirrorNonReflect]
+	public string Nome { get; set; } = string.Empty;
+	public int Portas { get; set; }
+	public int Janelas { get; set; }
+}
+
+public class CasaSemAtributoDto
+{
+	public string Nome { get; set; } = string.Empty;
+	public int Portas { get; set; }
+	public int Janelas { get; set; }
+}
